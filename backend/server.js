@@ -3,9 +3,9 @@ const cors = require('cors');
 const app = express();
 const PORT = 3000;
 
-// Middleware
+// Middleware phải có
 app.use(cors());
-app.use(express.json());
+app.use(express.json()); // <==== Cực kỳ quan trọng
 
 // ===== Mảng tạm users =====
 let users = [
@@ -15,8 +15,6 @@ let users = [
 ];
 
 // ===== ROUTES =====
-
-// Trang gốc
 app.get('/', (req, res) => {
   res.send('Welcome to Group 10 API (Hoạt động 3)');
 });
@@ -28,6 +26,7 @@ app.get('/users', (req, res) => {
 
 // POST /users - Thêm user mới
 app.post('/users', (req, res) => {
+  console.log('Body nhận được:', req.body); // Debug xem có dữ liệu chưa
   const { name, email } = req.body;
 
   if (!name || !email) {
