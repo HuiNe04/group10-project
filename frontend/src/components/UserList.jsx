@@ -1,51 +1,47 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
-const UserList = () => {
+function UserList() {
   const [users, setUsers] = useState([]);
 
-  // Lấy dữ liệu users từ backend
   const fetchUsers = async () => {
     try {
       const res = await axios.get("http://localhost:3000/users");
       setUsers(res.data);
-    } catch (error) {
-      console.error("Lỗi khi lấy danh sách user:", error);
+    } catch (err) {
+      console.error("Lỗi khi lấy danh sách user:", err);
     }
   };
 
-  // Tự động gọi khi component render lần đầu
   useEffect(() => {
     fetchUsers();
   }, []);
 
   return (
-    <div style={styles.card}>
-      <h2>📋 Danh sách người dùng</h2>
+    <div>
+      <h3>📋 Danh sách người dùng (MongoDB)</h3>
       {users.length === 0 ? (
-        <p>Chưa có người dùng nào.</p>
+        <p>Chưa có người dùng nào!</p>
       ) : (
-        <ul>
-          {users.map((user) => (
-            <li key={user.id}>
-              <b>{user.name}</b> - {user.email}
+        <ul style={{ listStyle: "none", padding: 0 }}>
+          {users.map((u) => (
+            <li
+              key={u._id}
+              style={{
+                background: "#f0f0f0",
+                margin: "6px auto",
+                padding: "8px",
+                borderRadius: "6px",
+                width: "80%",
+              }}
+            >
+              <strong>{u.name}</strong> — {u.email}
             </li>
           ))}
         </ul>
       )}
     </div>
   );
-};
-
-const styles = {
-  card: {
-    border: "1px solid #ddd",
-    borderRadius: "10px",
-    padding: "20px",
-    width: "400px",
-    margin: "20px auto",
-    backgroundColor: "#f9f9f9",
-  },
-};
+}
 
 export default UserList;
