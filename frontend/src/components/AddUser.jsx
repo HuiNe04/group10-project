@@ -1,77 +1,46 @@
 import React, { useState } from "react";
 import axios from "axios";
 
-const AddUser = ({ onUserAdded }) => {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+function AddUser({ onUserAdded }) {
+  const [form, setForm] = useState({ name: "", email: "" });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!name || !email) {
-      alert("Vui lòng nhập đầy đủ thông tin!");
-      return;
-    }
-
     try {
-      await axios.post("http://localhost:3000/users", { name, email });
-      alert("✅ Thêm user thành công!");
-      setName("");
-      setEmail("");
-      onUserAdded(); // Cập nhật lại danh sách
+      await axios.post("http://localhost:3000/users", form);
+      setForm({ name: "", email: "" });
+      onUserAdded(); // gọi lại hàm reload bên App.js
     } catch (err) {
       console.error("Lỗi khi thêm user:", err);
-      alert("❌ Thêm thất bại!");
+      alert("Không thể thêm user, vui lòng kiểm tra backend!");
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} style={styles.form}>
-      <h2>➕ Thêm người dùng</h2>
+    <form
+      onSubmit={handleSubmit}
+      style={{ marginBottom: "20px", display: "flex", justifyContent: "center" }}
+    >
       <input
         type="text"
-        placeholder="Nhập tên..."
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        style={styles.input}
+        placeholder="Tên"
+        value={form.name}
+        onChange={(e) => setForm({ ...form, name: e.target.value })}
+        required
       />
       <input
         type="email"
-        placeholder="Nhập email..."
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        style={styles.input}
+        placeholder="Email"
+        value={form.email}
+        onChange={(e) => setForm({ ...form, email: e.target.value })}
+        required
+        style={{ marginLeft: "10px" }}
       />
-      <button type="submit" style={styles.btn}>
+      <button type="submit" style={{ marginLeft: "10px" }}>
         Thêm
       </button>
     </form>
   );
-};
-
-const styles = {
-  form: {
-    border: "1px solid #ccc",
-    borderRadius: "10px",
-    padding: "20px",
-    width: "400px",
-    margin: "20px auto",
-    backgroundColor: "#e6f2ff",
-  },
-  input: {
-    padding: "10px",
-    margin: "5px 0",
-    borderRadius: "6px",
-    border: "1px solid #999",
-  },
-  btn: {
-    backgroundColor: "#007bff",
-    color: "#fff",
-    border: "none",
-    padding: "10px",
-    borderRadius: "6px",
-    cursor: "pointer",
-  },
-};
+}
 
 export default AddUser;
