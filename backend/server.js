@@ -17,7 +17,7 @@ mongoose
   .catch((err) => console.error("❌ Lỗi kết nối MongoDB:", err));
 
 // Routes
-app.use("/", userRoutes);
+app.use("/api", userRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`))
