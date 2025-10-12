@@ -5,7 +5,7 @@ const PORT = 3000;
 
 // Middleware phải có
 app.use(cors());
-app.use(express.json()); // <==== Cực kỳ quan trọng
+app.use(express.json()); // <====  quan trọng
 
 // ===== Mảng tạm users =====
 let users = [
