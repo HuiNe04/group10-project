@@ -6,7 +6,7 @@ function AddUser({ onUserAdded }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await axios.post("http://localhost:3000/users", form);
+    await axios.post("http://localhost:5000/users", form);
     setForm({ name: "", email: "" });
     onUserAdded();
   };
