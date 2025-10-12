@@ -3,43 +3,69 @@ import axios from "axios";
 
 function UserList() {
   const [users, setUsers] = useState([]);
+  const [editingUser, setEditingUser] = useState(null);
+  const [editName, setEditName] = useState("");
+  const [editEmail, setEditEmail] = useState("");
 
+  // Load users
   const fetchUsers = async () => {
-    try {
-      const res = await axios.get("http://localhost:3000/users");
-      setUsers(res.data);
-    } catch (err) {
-      console.error("Lỗi khi lấy danh sách user:", err);
-    }
+    const res = await axios.get("http://localhost:5000/api/users");
+    setUsers(res.data);
   };
 
   useEffect(() => {
     fetchUsers();
   }, []);
 
+  // Xóa user
+  const handleDelete = async (id) => {
+    await axios.delete(`http://localhost:5000/api/users/${id}`);
+    fetchUsers();
+  };
+
+  // Bắt đầu sửa user
+  const handleEdit = (user) => {
+    setEditingUser(user._id);
+    setEditName(user.name);
+    setEditEmail(user.email);
+  };
+
+  // Cập nhật user
+  const handleUpdate = async (id) => {
+    await axios.put(`http://localhost:5000/api/users/${id}`, {
+      name: editName,
+      email: editEmail,
+    });
+    setEditingUser(null);
+    fetchUsers();
+  };
+
   return (
     <div>
-      <h3>📋 Danh sách người dùng (MongoDB)</h3>
-      {users.length === 0 ? (
-        <p>Chưa có người dùng nào!</p>
-      ) : (
-        <ul style={{ listStyle: "none", padding: 0 }}>
-          {users.map((u) => (
-            <li
-              key={u._id}
-              style={{
-                background: "#f0f0f0",
-                margin: "6px auto",
-                padding: "8px",
-                borderRadius: "6px",
-                width: "80%",
-              }}
-            >
-              <strong>{u.name}</strong> — {u.email}
-            </li>
-          ))}
-        </ul>
-      )}
+      <h2>Danh sách người dùng</h2>
+      {users.map((user) => (
+        <div key={user._id}>
+          {editingUser === user._id ? (
+            <>
+              <input
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+              />
+              <input
+                value={editEmail}
+                onChange={(e) => setEditEmail(e.target.value)}
+              />
+              <button onClick={() => handleUpdate(user._id)}>Lưu</button>
+            </>
+          ) : (
+            <>
+              <span>{user.name} - {user.email}</span>
+              <button onClick={() => handleEdit(user)}>Sửa</button>
+              <button onClick={() => handleDelete(user._id)}>Xóa</button>
+            </>
+          )}
+        </div>
+      ))}
     </div>
   );
 }
