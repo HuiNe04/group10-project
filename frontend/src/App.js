@@ -6,14 +6,14 @@ function App() {
   const [reload, setReload] = useState(false);
 
   const refreshUsers = () => {
-    setReload(!reload);
+    setReload((prev) => !prev);
   };
 
   return (
     <div style={{ textAlign: "center", fontFamily: "Arial" }}>
       <h1>🌐 Group 10 - User Management</h1>
       <AddUser onUserAdded={refreshUsers} />
-      <UserList key={reload} />
+      <UserList reload={reload} />
     </div>
   );
 }

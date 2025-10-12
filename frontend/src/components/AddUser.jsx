@@ -6,9 +6,26 @@ function AddUser({ onUserAdded }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await axios.post("http://localhost:5000/users", form);
-    setForm({ name: "", email: "" });
-    onUserAdded();
+    const { name, email } = form;
+
+    if (!name.trim()) {
+      alert("⚠️ Name không được để trống");
+      return;
+    }
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      alert("⚠️ Email không hợp lệ");
+      return;
+    }
+
+    try {
+      await axios.post("http://localhost:5000/api/users", form);
+      alert("✅ Thêm user thành công!");
+      setForm({ name: "", email: "" });
+      onUserAdded(); // gọi callback báo App reload
+    } catch (err) {
+      console.error("❌ Lỗi khi thêm user:", err.message);
+      alert("Không thể thêm user! Kiểm tra backend.");
+    }
   };
 
   return (
