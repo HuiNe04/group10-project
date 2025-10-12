@@ -12,9 +12,13 @@ Người dùng có thể thêm, sửa, xóa và xem danh sách người dùng th
 
 ## Thành viên nhóm
 
-Nguyễn Châu Trường Huy | Database & Quản lý nhóm | Thiết kế CSDL MySQL, tạo bảng, kết nối DB, kiểm thử dữ liệu |
-Võ Văn Khanh           | Backend | Xây dựng API RESTful (GET, POST, PUT, DELETE) bằng Express, tích hợp với MongoDB/Mongoose |
-Đoàn Thị Huyền Anh     | Frontend | Thiết kế giao diện bằng ReactJS, gọi API bằng Axios, xử lý validation form |
+| STT | Họ và Tên                | Vai trò | Phụ trách |
+|-----|---------------------------|----------|------------|
+| 1️⃣ | **Nguyễn Châu Trường Huy** | Database & Quản lý nhóm | Thiết kế CSDL MySQL, tạo bảng, kết nối DB, kiểm thử dữ liệu |
+| 2️⃣ | **Võ Văn Khanh**          | Backend | Xây dựng API RESTful (GET, POST, PUT, DELETE) bằng Express, tích hợp với MongoDB/Mongoose |
+| 3️⃣ | **Đoàn Thị Huyền Anh**     | Frontend | Thiết kế giao diện bằng ReactJS, gọi API bằng Axios, xử lý validation form |
+
+---
 
 
 ## Công nghệ sử dụng
@@ -66,3 +70,4 @@ npm install
 npm start
 
 Ứng dụng mở tại: http://localhost:3000
+
