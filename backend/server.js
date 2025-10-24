@@ -6,11 +6,18 @@ const userRoutes = require("./routes/user");
 const authRoutes = require("./routes/auth");
 const profileRoutes = require("./routes/profile");
 
+
+
 dotenv.config();
 
 const app = express();
 app.use(express.json());
 app.use(cors());
+app.use((req, res, next) => {
+  console.log(`📡 ${req.method} ${req.originalUrl}`);
+  next();
+});
+
 
 // Kết nối MongoDB
 mongoose
