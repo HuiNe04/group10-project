@@ -1,34 +1,31 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
+import { useNavigate } from "react-router-dom";
 
-function Profile() {
-  const [user, setUser] = useState(null);
+function EditProfile() {
   const [form, setForm] = useState({ name: "", password: "", avatar: "" });
+  const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
-  // Lấy thông tin người dùng
-  const fetchProfile = async () => {
-    try {
-      const res = await axios.get("http://localhost:5000/api/profile", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setUser(res.data);
-      setForm({
-        name: res.data.name,
-        avatar: res.data.avatar || "",
-        password: "",
-      });
-    } catch (err) {
-      Swal.fire("❌ Lỗi", "Không thể tải thông tin người dùng", "error");
-    }
-  };
-
   useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await axios.get("http://localhost:5000/api/profile", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setForm({
+          name: res.data.name,
+          avatar: res.data.avatar || "",
+          password: "",
+        });
+      } catch (err) {
+        Swal.fire("❌ Lỗi", "Không thể tải thông tin người dùng", "error");
+      }
+    };
     fetchProfile();
   }, []);
 
-  // Cập nhật hồ sơ
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
@@ -39,19 +36,15 @@ function Profile() {
           password: form.password || undefined,
           avatar: form.avatar,
         },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
+
       Swal.fire("✅ Thành công", "Cập nhật hồ sơ thành công", "success");
-      fetchProfile();
+      navigate("/profile");
     } catch (err) {
       Swal.fire("❌ Lỗi", "Không thể cập nhật hồ sơ", "error");
     }
   };
-
-  if (!user)
-    return <p style={{ textAlign: "center" }}>⏳ Đang tải thông tin...</p>;
 
   return (
     <div
@@ -65,22 +58,8 @@ function Profile() {
       }}
     >
       <h2 style={{ textAlign: "center", color: "#007bff" }}>
-        👤 Thông tin cá nhân
+        ✏️ Cập nhật hồ sơ
       </h2>
-
-      <div style={{ textAlign: "center", margin: "20px 0" }}>
-        <img
-          src={user.avatar || "https://via.placeholder.com/100"}
-          alt="Avatar"
-          style={{
-            width: "100px",
-            height: "100px",
-            borderRadius: "50%",
-            objectFit: "cover",
-            border: "3px solid #007bff",
-          }}
-        />
-      </div>
 
       <form
         onSubmit={handleUpdate}
@@ -110,9 +89,18 @@ function Profile() {
           style={inputStyle}
         />
 
-        <button type="submit" style={buttonStyle}>
-          💾 Cập nhật hồ sơ
-        </button>
+        <div style={{ display: "flex", justifyContent: "space-between" }}>
+          <button type="submit" style={saveBtn}>
+            💾 Lưu thay đổi
+          </button>
+          <button
+            type="button"
+            style={cancelBtn}
+            onClick={() => navigate("/profile")}
+          >
+            ⬅️ Quay lại
+          </button>
+        </div>
       </form>
     </div>
   );
@@ -125,8 +113,8 @@ const inputStyle = {
   outline: "none",
 };
 
-const buttonStyle = {
-  background: "linear-gradient(135deg, #007bff, #00b4d8)",
+const saveBtn = {
+  background: "#28a745",
   color: "#fff",
   padding: "10px 16px",
   border: "none",
@@ -135,4 +123,14 @@ const buttonStyle = {
   fontWeight: 500,
 };
 
-export default Profile;
+const cancelBtn = {
+  background: "#6c757d",
+  color: "#fff",
+  padding: "10px 16px",
+  border: "none",
+  borderRadius: "8px",
+  cursor: "pointer",
+  fontWeight: 500,
+};
+
+export default EditProfile;

@@ -5,7 +5,8 @@ import Login from "./components/Login";
 import Signup from "./components/Signup";
 import AddUser from "./components/AddUser";
 import UserList from "./components/UserList";
-import Profile from "./components/Profile"; // ✅ Thêm dòng này
+import ViewProfile from "./components/ViewProfile";
+import EditProfile from "./components/EditProfile";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
@@ -36,9 +37,13 @@ function App() {
 
           {/* --- Route Profile (chỉ khi đăng nhập) --- */}
           <Route
-            path="/profile"
-            element={isLoggedIn ? <Profile /> : <Navigate to="/login" replace />}
-          />
+  path="/profile"
+  element={isLoggedIn ? <ViewProfile /> : <Navigate to="/login" />}
+/>
+<Route
+  path="/profile/edit"
+  element={isLoggedIn ? <EditProfile /> : <Navigate to="/login" />}
+/>
 
           {/* --- Route chính CRUD User (chỉ khi đăng nhập) --- */}
           {isLoggedIn ? (
