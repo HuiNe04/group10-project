@@ -23,7 +23,10 @@ function Navbar({ isLoggedIn, onLogout }) {
         boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
       }}
     >
-      <h2 style={{ margin: 0, cursor: "pointer" }} onClick={() => navigate("/")}>
+      <h2
+        style={{ margin: 0, cursor: "pointer" }}
+        onClick={() => navigate("/")}
+      >
         🌐 Group 10
       </h2>
       <div>
@@ -37,9 +40,20 @@ function Navbar({ isLoggedIn, onLogout }) {
             </button>
           </>
         ) : (
-          <button style={{ ...navBtn, background: "#dc3545" }} onClick={handleLogout}>
-            Đăng xuất
-          </button>
+          <>
+            <button
+              style={{ ...navBtn, background: "#17a2b8" }}
+              onClick={() => navigate("/profile")}
+            >
+              👤 Hồ sơ
+            </button>
+            <button
+              style={{ ...navBtn, background: "#dc3545" }}
+              onClick={handleLogout}
+            >
+              🚪 Đăng xuất
+            </button>
+          </>
         )}
       </div>
     </nav>

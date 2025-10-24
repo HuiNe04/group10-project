@@ -5,6 +5,7 @@ import Login from "./components/Login";
 import Signup from "./components/Signup";
 import AddUser from "./components/AddUser";
 import UserList from "./components/UserList";
+import Profile from "./components/Profile"; // ✅ Thêm dòng này
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
@@ -29,9 +30,17 @@ function App() {
         <Navbar isLoggedIn={isLoggedIn} onLogout={handleLogout} />
 
         <Routes>
+          {/* --- Các route cơ bản --- */}
           <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Login onLoginSuccess={handleLoginSuccess} />} />
 
+          {/* --- Route Profile (chỉ khi đăng nhập) --- */}
+          <Route
+            path="/profile"
+            element={isLoggedIn ? <Profile /> : <Navigate to="/login" replace />}
+          />
+
+          {/* --- Route chính CRUD User (chỉ khi đăng nhập) --- */}
           {isLoggedIn ? (
             <Route
               path="/"
@@ -66,7 +75,7 @@ function App() {
                     <AddUser onUserAdded={refreshUsers} />
                   </div>
 
-                  {/* ✅ Danh sách user (chỉ 1 lần) */}
+                  {/* ✅ Danh sách user */}
                   <UserList reload={reload} />
                 </div>
               }
