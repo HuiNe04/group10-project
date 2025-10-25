@@ -15,6 +15,7 @@ function App() {
   const handleLoginSuccess = () => setIsLoggedIn(true);
   const handleLogout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("user"); // 🆕 xóa luôn thông tin user khi logout
     setIsLoggedIn(false);
   };
   const refreshUsers = () => setReload((prev) => !prev);
@@ -35,54 +36,76 @@ function App() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Login onLoginSuccess={handleLoginSuccess} />} />
 
-          {/* --- Route Profile (chỉ khi đăng nhập) --- */}
+          {/* --- Hồ sơ cá nhân --- */}
           <Route
-  path="/profile"
-  element={isLoggedIn ? <ViewProfile /> : <Navigate to="/login" />}
-/>
-<Route
-  path="/profile/edit"
-  element={isLoggedIn ? <EditProfile /> : <Navigate to="/login" />}
-/>
+            path="/profile"
+            element={isLoggedIn ? <ViewProfile /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/profile/edit"
+            element={isLoggedIn ? <EditProfile /> : <Navigate to="/login" />}
+          />
 
-          {/* --- Route chính CRUD User (chỉ khi đăng nhập) --- */}
+          {/* --- Trang quản lý user (Admin Only) --- */}
           {isLoggedIn ? (
             <Route
               path="/"
               element={
-                <div
-                  style={{
-                    padding: "40px 20px",
-                    maxWidth: "1000px",
-                    margin: "0 auto",
-                  }}
-                >
-                  <h1
-                    style={{
-                      textAlign: "center",
-                      color: "#007bff",
-                      marginBottom: "25px",
-                    }}
-                  >
-                    🌐 Group 10 - User Management
-                  </h1>
+                (() => {
+                  const currentUser = JSON.parse(localStorage.getItem("user") || "null");
 
-                  {/* ✅ Form Thêm user */}
-                  <div
-                    style={{
-                      background: "#fff",
-                      padding: "20px",
-                      borderRadius: "12px",
-                      boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                      marginBottom: "30px",
-                    }}
-                  >
-                    <AddUser onUserAdded={refreshUsers} />
-                  </div>
+                  if (!currentUser || currentUser.role !== "admin") {
+                    return (
+                      <div
+                        style={{
+                          textAlign: "center",
+                          marginTop: "100px",
+                          color: "#333",
+                        }}
+                      >
+                        <h2>🚫 Bạn không có quyền truy cập trang Admin</h2>
+                        <p>Chỉ tài khoản có vai trò <b>Admin</b> mới xem được danh sách người dùng.</p>
+                      </div>
+                    );
+                  }
 
-                  {/* ✅ Danh sách user */}
-                  <UserList reload={reload} />
-                </div>
+                  // Nếu là admin → hiển thị giao diện quản lý user
+                  return (
+                    <div
+                      style={{
+                        padding: "40px 20px",
+                        maxWidth: "1000px",
+                        margin: "0 auto",
+                      }}
+                    >
+                      <h1
+                        style={{
+                          textAlign: "center",
+                          color: "#007bff",
+                          marginBottom: "25px",
+                        }}
+                      >
+                        🌐 Admin Panel – Quản lý người dùng
+                      </h1>
+
+                      {/* ✅ Form Thêm user */}
+                      <div
+                        style={{
+                          background: "#fff",
+                          padding: "20px",
+                          borderRadius: "12px",
+                          boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                          marginBottom: "30px",
+                        }}
+                      >
+                        <AddUser onUserAdded={refreshUsers} />
+                      </div>
+
+                      {/* ✅ Danh sách user */}
+                      <UserList reload={reload} />
+                    </div>
+                  );
+                })()
               }
             />
           ) : (
