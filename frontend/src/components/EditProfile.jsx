@@ -5,9 +5,11 @@ import { useNavigate } from "react-router-dom";
 
 function EditProfile() {
   const [form, setForm] = useState({ name: "", password: "", avatar: "" });
+  const [uploading, setUploading] = useState(false);
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
+  // 🔹 Lấy thông tin user hiện tại
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -24,8 +26,33 @@ function EditProfile() {
       }
     };
     fetchProfile();
-  }, []);
+  }, [token]);
 
+  // 🔹 Upload ảnh lên Cloudinary
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const formData = new FormData();
+    formData.append("avatar", file);
+
+    try {
+      setUploading(true);
+      const res = await axios.post("http://localhost:5000/api/upload-avatar", formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      setForm({ ...form, avatar: res.data.avatar_url });
+      Swal.fire("✅ Thành công", "Upload ảnh đại diện thành công!", "success");
+    } catch (err) {
+      Swal.fire("❌ Lỗi", "Không thể upload ảnh đại diện", "error");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // 🔹 Cập nhật thông tin user (name, password, avatar)
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
@@ -57,9 +84,7 @@ function EditProfile() {
         boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
       }}
     >
-      <h2 style={{ textAlign: "center", color: "#007bff" }}>
-        ✏️ Cập nhật hồ sơ
-      </h2>
+      <h2 style={{ textAlign: "center", color: "#007bff" }}>✏️ Cập nhật hồ sơ</h2>
 
       <form
         onSubmit={handleUpdate}
@@ -81,13 +106,26 @@ function EditProfile() {
           style={inputStyle}
         />
 
-        <input
-          type="text"
-          placeholder="Link ảnh đại diện"
-          value={form.avatar}
-          onChange={(e) => setForm({ ...form, avatar: e.target.value })}
-          style={inputStyle}
-        />
+        {/* 🖼️ Hiển thị ảnh hiện tại */}
+        <div style={{ textAlign: "center" }}>
+          <img
+            src={form.avatar || "https://via.placeholder.com/120"}
+            alt="avatar"
+            style={{
+              width: "120px",
+              height: "120px",
+              borderRadius: "50%",
+              objectFit: "cover",
+              border: "2px solid #007bff",
+              marginBottom: "10px",
+            }}
+          />
+        </div>
+
+        {/* 🔼 Upload file ảnh */}
+        <input type="file" accept="image/*" onChange={handleAvatarUpload} />
+
+        {uploading && <p style={{ textAlign: "center" }}>⏳ Đang upload ảnh...</p>}
 
         <div style={{ display: "flex", justifyContent: "space-between" }}>
           <button type="submit" style={saveBtn}>
