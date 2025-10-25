@@ -7,6 +7,9 @@ import AddUser from "./components/AddUser";
 import UserList from "./components/UserList";
 import ViewProfile from "./components/ViewProfile";
 import EditProfile from "./components/EditProfile";
+import ForgotPassword from "./components/ForgotPassword";
+import ResetPassword from "./components/ResetPassword";
+
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
