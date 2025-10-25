@@ -12,9 +12,10 @@ function Login({ onLoginSuccess }) {
     try {
       const res = await axios.post("http://localhost:5000/api/auth/login", form);
       localStorage.setItem("token", res.data.token);
+      localStorage.setItem("user", JSON.stringify(res.data.user)); // 🆕 Lưu user
       setMessage("✅ Đăng nhập thành công!");
       onLoginSuccess();
-      setTimeout(() => navigate("/"), 1200);
+      setTimeout(() => navigate("/"), 1000);
     } catch (err) {
       setMessage("❌ Email hoặc mật khẩu không đúng!");
     }
@@ -77,13 +78,6 @@ function Login({ onLoginSuccess }) {
             {message}
           </p>
         )}
-
-        <p style={{ marginTop: "20px", fontSize: "14px" }}>
-          Chưa có tài khoản?{" "}
-          <a href="/signup" style={{ color: "#007bff", textDecoration: "none" }}>
-            Đăng ký ngay
-          </a>
-        </p>
       </div>
     </div>
   );
