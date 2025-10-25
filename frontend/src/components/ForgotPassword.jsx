@@ -1,20 +1,35 @@
 import React, { useState } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
+import { useNavigate } from "react-router-dom";
 
 function ForgotPassword() {
   const [email, setEmail] = useState("");
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!email.trim()) {
       Swal.fire("⚠️ Lỗi", "Vui lòng nhập email!", "warning");
       return;
     }
+
     try {
       const res = await axios.post("http://localhost:5000/api/forgot-password", { email });
-      Swal.fire("✅ Thành công", res.data.message, "success");
-      console.log("Token reset (xem console backend):", res.data.token);
+
+      Swal.fire({
+        icon: "success",
+        title: "✅ Thành công",
+        text: "Mã token đã được gửi! (xem trong console backend)",
+        showConfirmButton: false,
+        timer: 1500,
+      });
+
+      console.log("👉 Token reset (xem console backend):", res.data.token);
+
+      // 🆕 Tự động chuyển sang trang reset mật khẩu sau 1.5s
+      setTimeout(() => navigate("/reset-password"), 1500);
     } catch (err) {
       Swal.fire("❌ Lỗi", err.response?.data?.message || "Không thể gửi email", "error");
     }
@@ -24,7 +39,7 @@ function ForgotPassword() {
     <div style={containerStyle}>
       <div style={formStyle}>
         <h2>📧 Quên mật khẩu</h2>
-        <p>Nhập email để lấy mã đặt lại mật khẩu</p>
+        <p>Nhập email để nhận mã token đặt lại mật khẩu</p>
         <form onSubmit={handleSubmit}>
           <input
             type="email"
@@ -33,7 +48,9 @@ function ForgotPassword() {
             onChange={(e) => setEmail(e.target.value)}
             style={inputStyle}
           />
-          <button type="submit" style={buttonStyle}>Gửi yêu cầu</button>
+          <button type="submit" style={buttonStyle}>
+            Gửi yêu cầu
+          </button>
         </form>
       </div>
     </div>

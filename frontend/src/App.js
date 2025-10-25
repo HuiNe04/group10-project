@@ -38,7 +38,8 @@ function App() {
           {/* --- Các route cơ bản --- */}
           <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Login onLoginSuccess={handleLoginSuccess} />} />
-
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           {/* --- Hồ sơ cá nhân --- */}
           <Route
             path="/profile"
