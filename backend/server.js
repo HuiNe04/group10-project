@@ -5,7 +5,26 @@ const cors = require("cors");
 const userRoutes = require("./routes/user");
 const authRoutes = require("./routes/auth");
 const profileRoutes = require("./routes/profile");
+const adminRoutes = require("./routes/admin");
 
+
+
+// middleware/roleMiddleware.js
+module.exports = function (requiredRole) {
+  return function (req, res, next) {
+    if (!req.user) {
+      return res.status(401).json({ message: "Chưa đăng nhập" });
+    }
+
+    if (req.user.role !== requiredRole) {
+      return res
+        .status(403)
+        .json({ message: "Không có quyền truy cập (Admin required)" });
+    }
+
+    next();
+  };
+};
 
 
 dotenv.config();
@@ -29,6 +48,7 @@ mongoose
 app.use("/api", userRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api", profileRoutes);
+app.use("/api", adminRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`))

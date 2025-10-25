@@ -67,13 +67,22 @@ exports.updateUser = async (req, res) => {
   }
 };
 
-// 🗑️ DELETE: Xóa user theo id
+// controllers/userController.js (chỉ phần deleteUser thay thế)
 exports.deleteUser = async (req, res) => {
   const { id } = req.params;
   try {
+    // req.user được authMiddleware gắn (chứa id và role)
+    const requester = req.user; // { id, role, ... }
+
+    // Nếu requester không phải admin và không phải chính chủ thì không cho xóa
+    if (requester.role !== "admin" && requester.id !== id) {
+      return res.status(403).json({ message: "Không có quyền xóa user này" });
+    }
+
     const deletedUser = await User.findByIdAndDelete(id);
     if (!deletedUser)
       return res.status(404).json({ message: "Không tìm thấy user" });
+
     res.json({ message: "🗑️ Đã xóa user thành công" });
   } catch (error) {
     console.error("❌ Lỗi khi xóa user:", error);
