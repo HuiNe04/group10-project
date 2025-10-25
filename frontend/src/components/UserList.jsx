@@ -51,19 +51,18 @@ function UserList({ reload }) {
   };
 
   return (
-    <div style={{ marginTop: "30px" }}>
-      <h2 style={{ textAlign: "center", color: "#333", marginBottom: "20px" }}>
-        👥 Danh sách người dùng
-      </h2>
+    <div style={{ marginTop: "30px", textAlign: "center" }}>
+      <h2 style={{ color: "#007bff", marginBottom: "20px" }}>👥 Danh sách người dùng</h2>
 
       {users.length === 0 ? (
-        <p style={{ textAlign: "center", color: "#888" }}>Chưa có người dùng nào.</p>
+        <p style={{ color: "#888" }}>Chưa có người dùng nào.</p>
       ) : (
         <div
           style={{
             display: "grid",
             gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-            gap: "15px",
+            gap: "20px",
+            padding: "10px 30px",
           }}
         >
           {users.map((user) => (
@@ -76,7 +75,7 @@ function UserList({ reload }) {
                 boxShadow: "0 3px 10px rgba(0,0,0,0.1)",
                 transition: "transform 0.2s",
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.02)")}
+              onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.03)")}
               onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
             >
               {editingUser === user._id ? (
@@ -100,16 +99,16 @@ function UserList({ reload }) {
                 </>
               ) : (
                 <>
-                  <p style={{ fontWeight: "bold", color: "#007bff" }}>{user.name}</p>
-                  <p style={{ color: "#555" }}>{user.email}</p>
-                  <div style={{ marginTop: "8px" }}>
-                    <button onClick={() => handleEdit(user)} style={editBtn}>
-                      ✏️ Sửa
-                    </button>
-                    <button onClick={() => handleDelete(user._id)} style={deleteBtn}>
-                      🗑️ Xóa
-                    </button>
-                  </div>
+                  <p style={{ fontWeight: "bold", color: "#007bff", margin: "0" }}>
+                    {user.name}
+                  </p>
+                  <p style={{ color: "#555", margin: "5px 0 10px" }}>{user.email}</p>
+                  <button onClick={() => handleEdit(user)} style={editBtn}>
+                    ✏️ Sửa
+                  </button>
+                  <button onClick={() => handleDelete(user._id)} style={deleteBtn}>
+                    🗑️ Xóa
+                  </button>
                 </>
               )}
             </div>
@@ -120,7 +119,7 @@ function UserList({ reload }) {
   );
 }
 
-// 🎨 Style nhỏ gọn
+// 🎨 Styles
 const inputEdit = {
   width: "100%",
   padding: "8px",
