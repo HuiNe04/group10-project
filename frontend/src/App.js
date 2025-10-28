@@ -48,6 +48,8 @@ function App() {
             path="/profile/edit"
             element={isLoggedIn ? <EditProfile /> : <Navigate to="/login" />}
           />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
 
           {/* --- Trang quản lý user (Admin Only) --- */}
           {isLoggedIn ? (
