@@ -1,12 +1,26 @@
+// src/components/Navbar.jsx
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import API from "../api/axiosInstance";
 
 function Navbar({ isLoggedIn, onLogout }) {
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    if (window.confirm("Bạn có chắc muốn đăng xuất?")) {
-      onLogout();
+  const handleLogout = async () => {
+    if (!window.confirm("Bạn có chắc muốn đăng xuất?")) return;
+
+    try {
+      const refreshToken = localStorage.getItem("refreshToken");
+      if (refreshToken) {
+        // 🚪 Gọi API logout để revoke refresh token khỏi DB
+        await API.post("/auth/logout", { refreshToken });
+      }
+    } catch (err) {
+      console.warn("⚠️ Lỗi khi gọi API logout:", err.message);
+    } finally {
+      // 🧹 Xóa token, user info và điều hướng về trang login
+      localStorage.clear();
+      if (onLogout) onLogout();
       navigate("/login");
     }
   };
@@ -29,6 +43,7 @@ function Navbar({ isLoggedIn, onLogout }) {
       >
         🌐 Group 10
       </h2>
+
       <div>
         {!isLoggedIn ? (
           <>
