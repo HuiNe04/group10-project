@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import API from "../api/axiosInstance"; // 🆕 dùng axios instance có interceptor
 import { useNavigate } from "react-router-dom";
 
 function Login({ onLoginSuccess }) {
@@ -10,13 +10,19 @@ function Login({ onLoginSuccess }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/login", form);
-      localStorage.setItem("token", res.data.token);
+      // 🟢 Gửi request đăng nhập
+      const res = await API.post("/auth/login", form);
+
+      // 🪙 Lưu Access Token + Refresh Token + Thông tin user
+      localStorage.setItem("token", res.data.accessToken);
+      localStorage.setItem("refreshToken", res.data.refreshToken);
       localStorage.setItem("user", JSON.stringify(res.data.user));
+
       setMessage("✅ Đăng nhập thành công!");
-      onLoginSuccess();
-      setTimeout(() => navigate("/"), 1000);
+      if (onLoginSuccess) onLoginSuccess();
+      setTimeout(() => navigate("/"), 800);
     } catch (err) {
+      console.error("❌ Lỗi đăng nhập:", err.response?.data || err.message);
       setMessage("❌ Email hoặc mật khẩu không đúng!");
     }
   };
@@ -79,7 +85,7 @@ function Login({ onLoginSuccess }) {
           </p>
         )}
 
-        {/* 🆕 Liên kết Quên mật khẩu */}
+        {/* 🔑 Thêm liên kết Forgot password */}
         <p style={{ marginTop: "15px" }}>
           <a
             href="/forgot-password"
