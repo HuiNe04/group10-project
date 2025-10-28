@@ -1,23 +1,37 @@
 import React, { useState } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
+import { useNavigate } from "react-router-dom";
 
 function ResetPassword() {
   const [token, setToken] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!token.trim() || !newPassword.trim()) {
-      Swal.fire("⚠️ Lỗi", "Vui lòng nhập đủ token và mật khẩu!", "warning");
+      Swal.fire("⚠️ Lỗi", "Vui lòng nhập đầy đủ token và mật khẩu mới!", "warning");
       return;
     }
+
     try {
       const res = await axios.post("http://localhost:5000/api/reset-password", {
         token,
         newPassword,
       });
-      Swal.fire("✅ Thành công", res.data.message, "success");
+
+      Swal.fire({
+        icon: "success",
+        title: "✅ Thành công",
+        text: res.data.message + " Bạn sẽ được chuyển đến trang đăng nhập.",
+        showConfirmButton: false,
+        timer: 1800,
+      });
+
+      // 🕒 Tự động chuyển về trang đăng nhập sau khi reset thành công
+      setTimeout(() => navigate("/login"), 1800);
     } catch (err) {
       Swal.fire("❌ Lỗi", err.response?.data?.message || "Không thể đặt lại mật khẩu", "error");
     }
@@ -30,19 +44,21 @@ function ResetPassword() {
         <form onSubmit={handleSubmit}>
           <input
             type="text"
-            placeholder="Nhập token từ email (console backend)"
+            placeholder="Nhập token (xem console backend)"
             value={token}
             onChange={(e) => setToken(e.target.value)}
             style={inputStyle}
           />
           <input
             type="password"
-            placeholder="Nhập mật khẩu mới"
+            placeholder="Mật khẩu mới"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             style={inputStyle}
           />
-          <button type="submit" style={buttonStyle}>Đặt lại mật khẩu</button>
+          <button type="submit" style={buttonStyle}>
+            Đặt lại mật khẩu
+          </button>
         </form>
       </div>
     </div>
@@ -68,22 +84,24 @@ const formStyle = {
 const inputStyle = {
   width: "100%",
   padding: "12px",
+  margin: "10px 0",
   border: "1px solid #ccc",
   borderRadius: "8px",
-  marginBottom: "15px",
   fontSize: "15px",
   outline: "none",
 };
 
 const buttonStyle = {
   width: "100%",
-  background: "#28a745",
-  color: "#fff",
-  padding: "10px",
+  padding: "12px",
+  backgroundColor: "#28a745",
   border: "none",
   borderRadius: "8px",
+  color: "white",
+  fontSize: "15px",
   cursor: "pointer",
-  fontWeight: "600",
+  marginTop: "10px",
+  transition: "0.3s",
 };
 
 export default ResetPassword;
