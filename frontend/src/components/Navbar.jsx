@@ -1,12 +1,26 @@
+// src/components/Navbar.jsx
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import API from "../api/axiosInstance";
 
 function Navbar({ isLoggedIn, onLogout }) {
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    if (window.confirm("Bạn có chắc muốn đăng xuất?")) {
-      onLogout();
+  const handleLogout = async () => {
+    if (!window.confirm("Bạn có chắc muốn đăng xuất?")) return;
+
+    try {
+      const refreshToken = localStorage.getItem("refreshToken");
+      if (refreshToken) {
+        // 🚪 Gọi API logout để revoke refresh token khỏi DB
+        await API.post("/auth/logout", { refreshToken });
+      }
+    } catch (err) {
+      console.warn("⚠️ Lỗi khi gọi API logout:", err.message);
+    } finally {
+      // 🧹 Xóa token, user info và điều hướng về trang login
+      localStorage.clear();
+      if (onLogout) onLogout();
       navigate("/login");
     }
   };
@@ -23,9 +37,13 @@ function Navbar({ isLoggedIn, onLogout }) {
         boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
       }}
     >
-      <h2 style={{ margin: 0, cursor: "pointer" }} onClick={() => navigate("/")}>
+      <h2
+        style={{ margin: 0, cursor: "pointer" }}
+        onClick={() => navigate("/")}
+      >
         🌐 Group 10
       </h2>
+
       <div>
         {!isLoggedIn ? (
           <>
@@ -37,9 +55,20 @@ function Navbar({ isLoggedIn, onLogout }) {
             </button>
           </>
         ) : (
-          <button style={{ ...navBtn, background: "#dc3545" }} onClick={handleLogout}>
-            Đăng xuất
-          </button>
+          <>
+            <button
+              style={{ ...navBtn, background: "#17a2b8" }}
+              onClick={() => navigate("/profile")}
+            >
+              👤 Hồ sơ
+            </button>
+            <button
+              style={{ ...navBtn, background: "#dc3545" }}
+              onClick={handleLogout}
+            >
+              🚪 Đăng xuất
+            </button>
+          </>
         )}
       </div>
     </nav>

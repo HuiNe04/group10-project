@@ -7,25 +7,35 @@ function UserList({ reload }) {
   const [editName, setEditName] = useState("");
   const [editEmail, setEditEmail] = useState("");
   const API_URL = "http://localhost:5000/api/users";
+  const token = localStorage.getItem("token");
+  const currentUser = JSON.parse(localStorage.getItem("user") || "null");
 
+  // 🔹 Lấy danh sách người dùng
   const fetchUsers = async () => {
     try {
-      const res = await axios.get(API_URL);
+      const res = await axios.get(API_URL, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setUsers(res.data);
     } catch (err) {
       console.error("❌ Lỗi khi tải danh sách user:", err.message);
-      alert("Không thể tải danh sách người dùng (kiểm tra backend).");
+      alert("Không thể tải danh sách người dùng (kiểm tra quyền Admin).");
     }
   };
 
   useEffect(() => {
     fetchUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reload]);
 
+  // 🔹 Xóa user
   const handleDelete = async (id) => {
-    if (!window.confirm("Bạn có chắc muốn xóa người dùng này?")) return;
+    if (!window.confirm("🗑️ Bạn có chắc muốn xóa người dùng này?")) return;
     try {
-      await axios.delete(`${API_URL}/${id}`);
+      await axios.delete(`${API_URL}/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      alert("✅ Đã xóa user thành công!");
       fetchUsers();
     } catch (err) {
       console.error("❌ Lỗi khi xóa user:", err.message);
@@ -33,15 +43,22 @@ function UserList({ reload }) {
     }
   };
 
+  // 🔹 Sửa user (hiển thị form)
   const handleEdit = (user) => {
     setEditingUser(user._id);
     setEditName(user.name);
     setEditEmail(user.email);
   };
 
+  // 🔹 Lưu thay đổi
   const handleUpdate = async (id) => {
     try {
-      await axios.put(`${API_URL}/${id}`, { name: editName, email: editEmail });
+      await axios.put(
+        `${API_URL}/${id}`,
+        { name: editName, email: editEmail },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      alert("💾 Cập nhật thành công!");
       setEditingUser(null);
       fetchUsers();
     } catch (err) {
@@ -51,19 +68,20 @@ function UserList({ reload }) {
   };
 
   return (
-    <div style={{ marginTop: "30px" }}>
-      <h2 style={{ textAlign: "center", color: "#333", marginBottom: "20px" }}>
+    <div style={{ marginTop: "30px", textAlign: "center" }}>
+      <h2 style={{ color: "#007bff", marginBottom: "20px" }}>
         👥 Danh sách người dùng
       </h2>
 
       {users.length === 0 ? (
-        <p style={{ textAlign: "center", color: "#888" }}>Chưa có người dùng nào.</p>
+        <p style={{ color: "#888" }}>Chưa có người dùng nào.</p>
       ) : (
         <div
           style={{
             display: "grid",
             gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-            gap: "15px",
+            gap: "20px",
+            padding: "10px 30px",
           }}
         >
           {users.map((user) => (
@@ -76,8 +94,12 @@ function UserList({ reload }) {
                 boxShadow: "0 3px 10px rgba(0,0,0,0.1)",
                 transition: "transform 0.2s",
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.02)")}
-              onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.transform = "scale(1.03)")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.transform = "scale(1)")
+              }
             >
               {editingUser === user._id ? (
                 <>
@@ -91,25 +113,67 @@ function UserList({ reload }) {
                     value={editEmail}
                     onChange={(e) => setEditEmail(e.target.value)}
                   />
-                  <button onClick={() => handleUpdate(user._id)} style={saveBtn}>
+                  <button
+                    onClick={() => handleUpdate(user._id)}
+                    style={saveBtn}
+                  >
                     💾 Lưu
                   </button>
-                  <button onClick={() => setEditingUser(null)} style={cancelBtn}>
+                  <button
+                    onClick={() => setEditingUser(null)}
+                    style={cancelBtn}
+                  >
                     ❌ Hủy
                   </button>
                 </>
               ) : (
                 <>
-                  <p style={{ fontWeight: "bold", color: "#007bff" }}>{user.name}</p>
-                  <p style={{ color: "#555" }}>{user.email}</p>
-                  <div style={{ marginTop: "8px" }}>
-                    <button onClick={() => handleEdit(user)} style={editBtn}>
-                      ✏️ Sửa
-                    </button>
-                    <button onClick={() => handleDelete(user._id)} style={deleteBtn}>
-                      🗑️ Xóa
-                    </button>
-                  </div>
+                  <img
+                    src={user.avatar || "https://via.placeholder.com/80"}
+                    alt="avatar"
+                    style={{
+                      width: "80px",
+                      height: "80px",
+                      borderRadius: "50%",
+                      objectFit: "cover",
+                      marginBottom: "10px",
+                      border: "2px solid #007bff",
+                    }}
+                  />
+                  <p
+                    style={{
+                      fontWeight: "bold",
+                      color: "#007bff",
+                      margin: "0",
+                    }}
+                  >
+                    {user.name}
+                  </p>
+                  <p style={{ color: "#555", margin: "5px 0 10px" }}>
+                    {user.email}
+                  </p>
+                  <p style={{ fontSize: "13px", color: "#888" }}>
+                    Role: {user.role}
+                  </p>
+
+                  {/* Chỉ Admin hoặc chính user đó mới được phép xóa */}
+                  {(currentUser?.role === "admin" ||
+                    currentUser?._id === user._id) && (
+                    <>
+                      <button
+                        onClick={() => handleEdit(user)}
+                        style={editBtn}
+                      >
+                        ✏️ Sửa
+                      </button>
+                      <button
+                        onClick={() => handleDelete(user._id)}
+                        style={deleteBtn}
+                      >
+                        🗑️ Xóa
+                      </button>
+                    </>
+                  )}
                 </>
               )}
             </div>
@@ -120,7 +184,7 @@ function UserList({ reload }) {
   );
 }
 
-// 🎨 Style nhỏ gọn
+// 💅 Style
 const inputEdit = {
   width: "100%",
   padding: "8px",
