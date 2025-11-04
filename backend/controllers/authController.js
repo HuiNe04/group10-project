@@ -1,12 +1,16 @@
-// controllers/authController.js
+// controllers/authController.js 
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const RefreshToken = require("../models/RefreshToken");
 
-// --- Cấu hình thời gian sống ---
-const ACCESS_TOKEN_EXPIRE = "15m"; // Access Token hết hạn sau 15 phút
-const REFRESH_TOKEN_EXPIRE_DAYS = 7; // Refresh Token sống 7 ngày
+// --- Cấu hình thời gian sống (đọc từ .env hoặc mặc định) ---
+const ACCESS_TOKEN_EXPIRE = process.env.ACCESS_TOKEN_EXPIRE || "15m";
+const REFRESH_TOKEN_EXPIRE_DAYS = parseInt(process.env.REFRESH_TOKEN_EXPIRE_DAYS || "7", 10);
+
+// Log để kiểm tra .env có nạp đúng không
+console.log("⚙️ Access token expire time:", ACCESS_TOKEN_EXPIRE);
+console.log("⚙️ Refresh token expire days:", REFRESH_TOKEN_EXPIRE_DAYS);
 
 // --- Tạo Access Token ---
 function createAccessToken(payload) {
@@ -74,7 +78,9 @@ exports.login = async (req, res) => {
     const refreshToken = createRefreshToken({ id: user._id });
 
     // 💾 Lưu Refresh Token vào DB
-    const expiresAt = new Date(Date.now() + REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60 * 1000);
+    const expiresAt = new Date(
+      Date.now() + REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60 * 1000
+    );
     await RefreshToken.create({
       userId: user._id,
       token: refreshToken,
@@ -110,10 +116,15 @@ exports.refresh = async (req, res) => {
     // Xác minh token
     let decoded;
     try {
-      decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET || "refresh456");
+      decoded = jwt.verify(
+        refreshToken,
+        process.env.JWT_REFRESH_SECRET || "refresh456"
+      );
     } catch (err) {
       await RefreshToken.deleteOne({ token: refreshToken });
-      return res.status(403).json({ message: "Refresh token không hợp lệ hoặc đã hết hạn" });
+      return res
+        .status(403)
+        .json({ message: "Refresh token không hợp lệ hoặc đã hết hạn" });
     }
 
     // Tạo Access Token mới
@@ -123,7 +134,10 @@ exports.refresh = async (req, res) => {
       return res.status(404).json({ message: "Không tìm thấy người dùng" });
     }
 
-    const newAccessToken = createAccessToken({ id: user._id, role: user.role });
+    const newAccessToken = createAccessToken({
+      id: user._id,
+      role: user.role,
+    });
     res.json({ accessToken: newAccessToken });
   } catch (err) {
     console.error("❌ Lỗi refresh token:", err.message);
@@ -135,8 +149,7 @@ exports.refresh = async (req, res) => {
 exports.logout = async (req, res) => {
   try {
     const { refreshToken } = req.body;
-    if (refreshToken)
-      await RefreshToken.deleteOne({ token: refreshToken });
+    if (refreshToken) await RefreshToken.deleteOne({ token: refreshToken });
     res.status(200).json({ message: "🚪 Đã đăng xuất và thu hồi token" });
   } catch (err) {
     console.error("❌ Lỗi logout:", err.message);
