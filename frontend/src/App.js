@@ -10,15 +10,13 @@ import EditProfile from "./components/EditProfile";
 import ForgotPassword from "./components/ForgotPassword";
 import ResetPassword from "./components/ResetPassword";
 
-
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
   const [reload, setReload] = useState(false);
 
   const handleLoginSuccess = () => setIsLoggedIn(true);
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user"); // 🆕 xóa luôn thông tin user khi logout
+    localStorage.clear();
     setIsLoggedIn(false);
   };
   const refreshUsers = () => setReload((prev) => !prev);
@@ -35,12 +33,13 @@ function App() {
         <Navbar isLoggedIn={isLoggedIn} onLogout={handleLogout} />
 
         <Routes>
-          {/* --- Các route cơ bản --- */}
+          {/* --- Auth routes --- */}
           <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Login onLoginSuccess={handleLoginSuccess} />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
-          {/* --- Hồ sơ cá nhân --- */}
+
+          {/* --- Hồ sơ cá nhân: tất cả role đều vào được --- */}
           <Route
             path="/profile"
             element={isLoggedIn ? <ViewProfile /> : <Navigate to="/login" />}
@@ -49,73 +48,85 @@ function App() {
             path="/profile/edit"
             element={isLoggedIn ? <EditProfile /> : <Navigate to="/login" />}
           />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
 
-          {/* --- Trang quản lý user (Admin Only) --- */}
+          {/* --- Trang quản lý User --- */}
           {isLoggedIn ? (
             <Route
               path="/"
               element={
                 (() => {
                   const currentUser = JSON.parse(localStorage.getItem("user") || "null");
+                  if (!currentUser) return <Navigate to="/login" />;
 
-                  if (!currentUser || currentUser.role !== "admin") {
+                  // ✅ ADMIN: CRUD user
+                  if (currentUser.role === "admin") {
                     return (
                       <div
                         style={{
-                          textAlign: "center",
-                          marginTop: "100px",
-                          color: "#333",
+                          padding: "40px 20px",
+                          maxWidth: "1000px",
+                          margin: "0 auto",
                         }}
                       >
-                        <h2>🚫 Bạn không có quyền truy cập trang Admin</h2>
-                        <p>Chỉ tài khoản có vai trò <b>Admin</b> mới xem được danh sách người dùng.</p>
+                        <h1
+                          style={{
+                            textAlign: "center",
+                            color: "#007bff",
+                            marginBottom: "25px",
+                          }}
+                        >
+                          🌐 Admin Panel – Quản lý người dùng
+                        </h1>
+
+                        <div
+                          style={{
+                            background: "#fff",
+                            padding: "20px",
+                            borderRadius: "12px",
+                            boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                            marginBottom: "30px",
+                          }}
+                        >
+                          <AddUser onUserAdded={refreshUsers} />
+                        </div>
+
+                        <UserList reload={reload} readonly={false} />
                       </div>
                     );
                   }
 
-                  // Nếu là admin → hiển thị giao diện quản lý user
-                  return (
-                    <div
-                      style={{
-                        padding: "40px 20px",
-                        maxWidth: "1000px",
-                        margin: "0 auto",
-                      }}
-                    >
-                      <h1
-                        style={{
-                          textAlign: "center",
-                          color: "#007bff",
-                          marginBottom: "25px",
-                        }}
-                      >
-                        🌐 Admin Panel – Quản lý người dùng
-                      </h1>
-
-                      {/* ✅ Form Thêm user */}
+                  // ✅ MODERATOR: chỉ xem danh sách user
+                  if (currentUser.role === "moderator") {
+                    return (
                       <div
                         style={{
-                          background: "#fff",
-                          padding: "20px",
-                          borderRadius: "12px",
-                          boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                          marginBottom: "30px",
+                          padding: "40px 20px",
+                          maxWidth: "1000px",
+                          margin: "0 auto",
                         }}
                       >
-                        <AddUser onUserAdded={refreshUsers} />
-                      </div>
+                        <h1
+                          style={{
+                            textAlign: "center",
+                            color: "#28a745",
+                            marginBottom: "25px",
+                          }}
+                        >
+                          👀 Moderator – Xem danh sách người dùng
+                        </h1>
 
-                      {/* ✅ Danh sách user */}
-                      <UserList reload={reload} />
-                    </div>
-                  );
+                        <UserList reload={reload} readonly={true} />
+                      </div>
+                    );
+                  }
+
+                  // ✅ USER: chuyển về hồ sơ cá nhân
+                  return <Navigate to="/profile" />;
                 })()
               }
             />
           ) : (
-            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route path="/" element={<Navigate to="/login" />} />
           )}
         </Routes>
       </div>
