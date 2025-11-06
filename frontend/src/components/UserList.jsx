@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
-function UserList({ reload }) {
+function UserList({ reload, readonly = false }) {
   const [users, setUsers] = useState([]);
   const [editingUser, setEditingUser] = useState(null);
   const [editName, setEditName] = useState("");
@@ -19,17 +19,17 @@ function UserList({ reload }) {
       setUsers(res.data);
     } catch (err) {
       console.error("❌ Lỗi khi tải danh sách user:", err.message);
-      alert("Không thể tải danh sách người dùng (kiểm tra quyền Admin).");
+      alert("Không thể tải danh sách người dùng (kiểm tra quyền Admin/Moderator).");
     }
   };
 
   useEffect(() => {
     fetchUsers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reload]);
 
   // 🔹 Xóa user
   const handleDelete = async (id) => {
+    if (readonly) return;
     if (!window.confirm("🗑️ Bạn có chắc muốn xóa người dùng này?")) return;
     try {
       await axios.delete(`${API_URL}/${id}`, {
@@ -45,6 +45,7 @@ function UserList({ reload }) {
 
   // 🔹 Sửa user (hiển thị form)
   const handleEdit = (user) => {
+    if (readonly) return;
     setEditingUser(user._id);
     setEditName(user.name);
     setEditEmail(user.email);
@@ -69,9 +70,7 @@ function UserList({ reload }) {
 
   return (
     <div style={{ marginTop: "30px", textAlign: "center" }}>
-      <h2 style={{ color: "#007bff", marginBottom: "20px" }}>
-        👥 Danh sách người dùng
-      </h2>
+      <h2 style={{ color: "#007bff", marginBottom: "20px" }}>👥 Danh sách người dùng</h2>
 
       {users.length === 0 ? (
         <p style={{ color: "#888" }}>Chưa có người dùng nào.</p>
@@ -92,14 +91,7 @@ function UserList({ reload }) {
                 padding: "15px",
                 borderRadius: "10px",
                 boxShadow: "0 3px 10px rgba(0,0,0,0.1)",
-                transition: "transform 0.2s",
               }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.transform = "scale(1.03)")
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.transform = "scale(1)")
-              }
             >
               {editingUser === user._id ? (
                 <>
@@ -113,16 +105,10 @@ function UserList({ reload }) {
                     value={editEmail}
                     onChange={(e) => setEditEmail(e.target.value)}
                   />
-                  <button
-                    onClick={() => handleUpdate(user._id)}
-                    style={saveBtn}
-                  >
+                  <button onClick={() => handleUpdate(user._id)} style={saveBtn}>
                     💾 Lưu
                   </button>
-                  <button
-                    onClick={() => setEditingUser(null)}
-                    style={cancelBtn}
-                  >
+                  <button onClick={() => setEditingUser(null)} style={cancelBtn}>
                     ❌ Hủy
                   </button>
                 </>
@@ -140,39 +126,28 @@ function UserList({ reload }) {
                       border: "2px solid #007bff",
                     }}
                   />
-                  <p
-                    style={{
-                      fontWeight: "bold",
-                      color: "#007bff",
-                      margin: "0",
-                    }}
-                  >
-                    {user.name}
-                  </p>
-                  <p style={{ color: "#555", margin: "5px 0 10px" }}>
-                    {user.email}
-                  </p>
-                  <p style={{ fontSize: "13px", color: "#888" }}>
-                    Role: {user.role}
-                  </p>
+                  <p style={{ fontWeight: "bold", color: "#007bff", margin: "0" }}>{user.name}</p>
+                  <p style={{ color: "#555", margin: "5px 0 10px" }}>{user.email}</p>
+                  <p style={{ fontSize: "13px", color: "#888" }}>Role: {user.role}</p>
 
-                  {/* Chỉ Admin hoặc chính user đó mới được phép xóa */}
-                  {(currentUser?.role === "admin" ||
-                    currentUser?._id === user._id) && (
-                    <>
-                      <button
-                        onClick={() => handleEdit(user)}
-                        style={editBtn}
-                      >
-                        ✏️ Sửa
-                      </button>
-                      <button
-                        onClick={() => handleDelete(user._id)}
-                        style={deleteBtn}
-                      >
-                        🗑️ Xóa
-                      </button>
-                    </>
+                  {/* ADMIN hoặc chính user */}
+                  {!readonly &&
+                    (currentUser?.role === "admin" || currentUser?._id === user._id) && (
+                      <>
+                        <button onClick={() => handleEdit(user)} style={editBtn}>
+                          ✏️ Sửa
+                        </button>
+                        <button onClick={() => handleDelete(user._id)} style={deleteBtn}>
+                          🗑️ Xóa
+                        </button>
+                      </>
+                    )}
+
+                  {/* MODERATOR chỉ xem */}
+                  {readonly && (
+                    <p style={{ fontSize: "12px", color: "#aaa", marginTop: "5px" }}>
+                      👀 Chế độ chỉ xem (Moderator)
+                    </p>
                   )}
                 </>
               )}

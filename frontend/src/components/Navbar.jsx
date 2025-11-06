@@ -5,6 +5,7 @@ import API from "../api/axiosInstance";
 
 function Navbar({ isLoggedIn, onLogout }) {
   const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem("user") || "null");
 
   const handleLogout = async () => {
     if (!window.confirm("Bạn có chắc muốn đăng xuất?")) return;
@@ -12,7 +13,6 @@ function Navbar({ isLoggedIn, onLogout }) {
     try {
       const refreshToken = localStorage.getItem("refreshToken");
       if (refreshToken) {
-        // 🚪 Gọi API logout để revoke refresh token khỏi DB
         await API.post("/auth/logout", { refreshToken });
       }
     } catch (err) {
@@ -22,6 +22,19 @@ function Navbar({ isLoggedIn, onLogout }) {
       localStorage.clear();
       if (onLogout) onLogout();
       navigate("/login");
+    }
+  };
+
+  // 🔁 Xác định trang chủ tùy role
+  const handleLogoClick = () => {
+    if (!isLoggedIn) {
+      navigate("/");
+      return;
+    }
+    if (user?.role === "admin" || user?.role === "moderator") {
+      navigate("/");
+    } else {
+      navigate("/profile");
     }
   };
 
@@ -37,13 +50,15 @@ function Navbar({ isLoggedIn, onLogout }) {
         boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
       }}
     >
+      {/* 🔷 Logo / Tiêu đề */}
       <h2
-        style={{ margin: 0, cursor: "pointer" }}
-        onClick={() => navigate("/")}
+        style={{ margin: 0, cursor: "pointer", userSelect: "none" }}
+        onClick={handleLogoClick}
       >
         🌐 Group 10
       </h2>
 
+      {/* 🔹 Menu bên phải */}
       <div>
         {!isLoggedIn ? (
           <>
@@ -56,6 +71,18 @@ function Navbar({ isLoggedIn, onLogout }) {
           </>
         ) : (
           <>
+            {/* 🔹 Nút riêng cho từng role */}
+            {user?.role === "admin" && (
+              <button style={navBtn} onClick={() => navigate("/")}>
+                ⚙️ Quản lý User
+              </button>
+            )}
+            {user?.role === "moderator" && (
+              <button style={navBtn} onClick={() => navigate("/")}>
+                👀 Xem danh sách
+              </button>
+            )}
+            {/* Người dùng bình thường vẫn có thể vào profile */}
             <button
               style={{ ...navBtn, background: "#17a2b8" }}
               onClick={() => navigate("/profile")}
@@ -75,6 +102,7 @@ function Navbar({ isLoggedIn, onLogout }) {
   );
 }
 
+// 💅 Style
 const navBtn = {
   background: "#0056b3",
   border: "none",
