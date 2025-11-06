@@ -1,75 +1,82 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
-import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
+import API from "../api/axiosInstance";
+import Swal from "sweetalert2";
 
 function EditProfile() {
   const [form, setForm] = useState({ name: "", password: "", avatar: "" });
+  const [preview, setPreview] = useState(""); // 🆕 Preview ảnh chọn mới
+  const [file, setFile] = useState(null); // 🆕 Lưu file ảnh tạm
   const [uploading, setUploading] = useState(false);
   const navigate = useNavigate();
-  const token = localStorage.getItem("token");
 
   // 🔹 Lấy thông tin user hiện tại
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/profile", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await API.get("/profile");
         setForm({
           name: res.data.name,
-          avatar: res.data.avatar || "",
           password: "",
         });
+        setPreview(res.data.avatar || "");
       } catch (err) {
-        Swal.fire("❌ Lỗi", "Không thể tải thông tin người dùng", "error");
+        console.error("❌ Lỗi khi tải thông tin user:", err.message);
+        Swal.fire("❌ Lỗi", "Không thể tải thông tin người dùng!", "error");
       }
     };
     fetchProfile();
-  }, [token]);
+  }, []);
 
-  // 🔹 Upload ảnh lên Cloudinary
-  const handleAvatarUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+  // 🖼️ Hiển thị preview khi chọn ảnh
+  const handlePreview = (e) => {
+    const selectedFile = e.target.files[0];
+    if (!selectedFile) return;
+    setFile(selectedFile);
+    setPreview(URL.createObjectURL(selectedFile)); // 🧠 Hiển thị ảnh tạm
+  };
+
+  // 📤 Upload ảnh lên Cloudinary qua backend
+  const handleAvatarUpload = async () => {
+    if (!file) {
+      Swal.fire("⚠️ Vui lòng chọn ảnh trước!", "", "warning");
+      return;
+    }
+
     const formData = new FormData();
     formData.append("avatar", file);
 
     try {
       setUploading(true);
-      const res = await axios.post("http://localhost:5000/api/upload-avatar", formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
-        },
+      const res = await API.post("/upload-avatar", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
+
       setForm({ ...form, avatar: res.data.avatar_url });
+      setPreview(res.data.avatar_url);
       Swal.fire("✅ Thành công", "Upload ảnh đại diện thành công!", "success");
     } catch (err) {
-      Swal.fire("❌ Lỗi", "Không thể upload ảnh đại diện", "error");
+      console.error("❌ Lỗi upload:", err.message);
+      Swal.fire("❌ Lỗi", "Không thể upload ảnh đại diện!", "error");
     } finally {
       setUploading(false);
     }
   };
 
-  // 🔹 Cập nhật thông tin user (name, password, avatar)
+  // 💾 Cập nhật thông tin user
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(
-        "http://localhost:5000/api/profile",
-        {
-          name: form.name,
-          password: form.password || undefined,
-          avatar: form.avatar,
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      Swal.fire("✅ Thành công", "Cập nhật hồ sơ thành công", "success");
+      await API.put("/profile", {
+        name: form.name,
+        password: form.password || undefined,
+        avatar: form.avatar,
+      });
+      Swal.fire("✅ Thành công", "Cập nhật hồ sơ thành công!", "success");
       navigate("/profile");
     } catch (err) {
-      Swal.fire("❌ Lỗi", "Không thể cập nhật hồ sơ", "error");
+      console.error("❌ Lỗi cập nhật hồ sơ:", err.message);
+      Swal.fire("❌ Lỗi", "Không thể cập nhật hồ sơ!", "error");
     }
   };
 
@@ -83,8 +90,7 @@ function EditProfile() {
         padding: "30px",
         boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
       }}
-    >
-      <h2 style={{ textAlign: "center", color: "#007bff" }}>✏️ Cập nhật hồ sơ</h2>
+    ><h2 style={{ textAlign: "center", color: "#007bff" }}>✏️ Cập nhật hồ sơ</h2>
 
       <form
         onSubmit={handleUpdate}
@@ -106,10 +112,10 @@ function EditProfile() {
           style={inputStyle}
         />
 
-        {/* 🖼️ Hiển thị ảnh hiện tại */}
+        {/* 🖼️ Hiển thị ảnh hiện tại hoặc preview ảnh mới */}
         <div style={{ textAlign: "center" }}>
           <img
-            src={form.avatar || "https://via.placeholder.com/120"}
+            src={preview || "https://via.placeholder.com/120"}
             alt="avatar"
             style={{
               width: "120px",
@@ -118,14 +124,26 @@ function EditProfile() {
               objectFit: "cover",
               border: "2px solid #007bff",
               marginBottom: "10px",
+              transition: "0.3s",
             }}
           />
         </div>
 
         {/* 🔼 Upload file ảnh */}
-        <input type="file" accept="image/*" onChange={handleAvatarUpload} />
+        <input type="file" accept="image/*" onChange={handlePreview} />
 
-        {uploading && <p style={{ textAlign: "center" }}>⏳ Đang upload ảnh...</p>}
+        <button
+          type="button"
+          onClick={handleAvatarUpload}
+          style={{
+            ...uploadBtn,
+            background: uploading ? "#ccc" : "#28a745",
+            cursor: uploading ? "not-allowed" : "pointer",
+          }}
+          disabled={uploading}
+        >
+          {uploading ? "⏳ Đang upload..." : "📤 Upload ảnh đại diện"}
+        </button>
 
         <div style={{ display: "flex", justifyContent: "space-between" }}>
           <button type="submit" style={saveBtn}>
@@ -144,6 +162,7 @@ function EditProfile() {
   );
 }
 
+// 💅 Style
 const inputStyle = {
   padding: "10px 12px",
   border: "1px solid #ccc",
@@ -151,8 +170,17 @@ const inputStyle = {
   outline: "none",
 };
 
+const uploadBtn = {
+  padding: "10px 16px",
+  border: "none",
+  borderRadius: "8px",
+  color: "white",
+  fontWeight: "500",
+  transition: "0.3s",
+};
+
 const saveBtn = {
-  background: "#28a745",
+  background: "#007bff",
   color: "#fff",
   padding: "10px 16px",
   border: "none",
