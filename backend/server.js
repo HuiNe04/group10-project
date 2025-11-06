@@ -12,20 +12,23 @@ const profileRoutes = require("./routes/profile");
 const adminRoutes = require("./routes/admin");
 const passwordRoutes = require("./routes/password");
 const uploadRoutes = require("./routes/upload");
+const logRoutes = require("./routes/logs");
+
+// ✅ Import middleware
+const { logActivity } = require("./middleware/logActivity");
 
 const app = express();
 
 // ✅ Middleware cơ bản
 app.use(express.json());
 app.use(cors());
+app.use(logActivity);
 
-// ✅ Log request cho dễ debug
+// ✅ Log request console để dễ debug
 app.use((req, res, next) => {
   console.log(`📡 ${req.method} ${req.originalUrl}`);
   next();
 });
-
-
 
 // ✅ Kết nối MongoDB
 mongoose
@@ -35,11 +38,12 @@ mongoose
 
 // ✅ Sử dụng routes
 app.use("/api", userRoutes);
-app.use("/api/auth", authRoutes);
+app.use("/api/auth", authRoutes); // ✅ chỉ cần dòng này thôi
 app.use("/api", profileRoutes);
 app.use("/api", adminRoutes);
 app.use("/api", passwordRoutes);
 app.use("/api", uploadRoutes);
+app.use("/api", logRoutes);
 
 // ✅ Chạy server
 const PORT = process.env.PORT || 5000;
