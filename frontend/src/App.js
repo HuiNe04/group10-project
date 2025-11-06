@@ -16,9 +16,7 @@ function App() {
 
   const handleLoginSuccess = () => setIsLoggedIn(true);
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    localStorage.removeItem("refreshToken");
+    localStorage.clear();
     setIsLoggedIn(false);
   };
   const refreshUsers = () => setReload((prev) => !prev);
@@ -45,13 +43,13 @@ function App() {
         <Navbar isLoggedIn={isLoggedIn} onLogout={handleLogout} />
 
         <Routes>
-          {/* --- Auth --- */}
+          {/* --- Auth routes --- */}
           <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Login onLoginSuccess={handleLoginSuccess} />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
 
-          {/* --- Profile --- */}
+          {/* --- Hồ sơ cá nhân: tất cả role đều vào được --- */}
           <Route
             path="/profile"
             element={isLoggedIn ? <ViewProfile /> : <Navigate to="/login" />}
@@ -61,54 +59,84 @@ function App() {
             element={isLoggedIn ? <EditProfile /> : <Navigate to="/login" />}
           />
 
-          {/* --- Admin Dashboard --- */}
+          {/* --- Trang quản lý User --- */}
           {isLoggedIn ? (
             <Route
               path="/"
               element={
                 (() => {
                   const currentUser = JSON.parse(localStorage.getItem("user") || "null");
-                  if (!currentUser || currentUser.role !== "admin") {
+                  if (!currentUser) return <Navigate to="/login" />;
+
+                  // ✅ ADMIN: CRUD user
+                  if (currentUser.role === "admin") {
                     return (
-                      <div style={{ textAlign: "center", marginTop: "100px", color: "#333" }}>
-                        <h2>🚫 Bạn không có quyền truy cập trang Admin</h2>
-                        <p>
-                          Chỉ tài khoản có vai trò <b>Admin</b> mới xem được danh sách người dùng.
-                        </p>
+                      <div
+                        style={{
+                          padding: "40px 20px",
+                          maxWidth: "1000px",
+                          margin: "0 auto",
+                        }}
+                      >
+                        <h1
+                          style={{
+                            textAlign: "center",
+                            color: "#007bff",
+                            marginBottom: "25px",
+                          }}
+                        >
+                          🌐 Admin Panel – Quản lý người dùng
+                        </h1>
+
+                        <div
+                          style={{
+                            background: "#fff",
+                            padding: "20px",
+                            borderRadius: "12px",
+                            boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                            marginBottom: "30px",
+                          }}
+                        >
+                          <AddUser onUserAdded={refreshUsers} />
+                        </div>
+
+                        <UserList reload={reload} readonly={false} />
                       </div>
                     );
                   }
 
-                  return (
-                    <div style={{ padding: "40px 20px", maxWidth: "1000px", margin: "0 auto" }}>
-                      <h1
-                        style={{
-                          textAlign: "center",
-                          color: "#007bff",
-                          marginBottom: "25px",
-                        }}
-                      >
-                        🌐 Admin Panel – Quản lý người dùng
-                      </h1>
+                  // ✅ MODERATOR: chỉ xem danh sách user
+                  if (currentUser.role === "moderator") {
+                    return (
                       <div
                         style={{
-                          background: "#fff",
-                          padding: "20px",
-                          borderRadius: "12px",
-                          boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                          marginBottom: "30px",
+                          padding: "40px 20px",
+                          maxWidth: "1000px",
+                          margin: "0 auto",
                         }}
                       >
-                        <AddUser onUserAdded={refreshUsers} />
+                        <h1
+                          style={{
+                            textAlign: "center",
+                            color: "#28a745",
+                            marginBottom: "25px",
+                          }}
+                        >
+                          👀 Moderator – Xem danh sách người dùng
+                        </h1>
+
+                        <UserList reload={reload} readonly={true} />
                       </div>
-                      <UserList reload={reload} />
-                    </div>
-                  );
+                    );
+                  }
+
+                  // ✅ USER: chuyển về hồ sơ cá nhân
+                  return <Navigate to="/profile" />;
                 })()
               }
             />
           ) : (
-            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route path="/" element={<Navigate to="/login" />} />
           )}
         </Routes>
       </div>
