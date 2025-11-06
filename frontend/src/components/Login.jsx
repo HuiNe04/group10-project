@@ -1,29 +1,62 @@
-import React, { useState } from "react";
-import API from "../api/axiosInstance"; // 🆕 dùng axios instance có interceptor
+import React, { useState, useEffect } from "react";
+import API from "../api/axiosInstance";
 import { useNavigate } from "react-router-dom";
 
 function Login({ onLoginSuccess }) {
   const [form, setForm] = useState({ email: "", password: "" });
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [locked, setLocked] = useState(false);
+  const [countdown, setCountdown] = useState(0); // ⏳ đếm ngược thời gian chờ
   const navigate = useNavigate();
 
+  // 🕒 Tự động đếm ngược
+  useEffect(() => {
+    if (locked && countdown > 0) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+      return () => clearTimeout(timer);
+    } else if (countdown === 0 && locked) {
+      setLocked(false);
+      setMessage("");
+    }
+  }, [locked, countdown]);
+
+  // 🧠 Gửi yêu cầu đăng nhập
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      // 🟢 Gửi request đăng nhập
-      const res = await API.post("/auth/login", form);
+    if (locked) {
+      setMessage(`🚫 Tài khoản bị tạm khóa. Vui lòng chờ ${countdown}s.`);
+      return;
+    }
 
-      // 🪙 Lưu Access Token + Refresh Token + Thông tin user
+    setLoading(true);
+    setMessage("");
+
+    try {
+      const res = await API.post("/auth/login", form);
       localStorage.setItem("token", res.data.accessToken);
       localStorage.setItem("refreshToken", res.data.refreshToken);
       localStorage.setItem("user", JSON.stringify(res.data.user));
 
       setMessage("✅ Đăng nhập thành công!");
       if (onLoginSuccess) onLoginSuccess();
-      setTimeout(() => navigate("/"), 800);
+      setTimeout(() => navigate("/"), 1000);
     } catch (err) {
-      console.error("❌ Lỗi đăng nhập:", err.response?.data || err.message);
-      setMessage("❌ Email hoặc mật khẩu không đúng!");
+      const status = err.response?.status;
+      const msg = err.response?.data?.message;
+
+      // ⚠️ Nếu bị rate limit
+      if (status === 429) {
+        setMessage("🚫 Bạn đã thử đăng nhập quá nhiều lần. Vui lòng thử lại sau 60 giây.");
+        setLocked(true);
+        setCountdown(60);
+      } else {
+        // ❌ Sai mật khẩu → xóa trường password
+        setMessage("❌ Sai email hoặc mật khẩu!");
+        setForm({ ...form, password: "" });
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -58,6 +91,7 @@ function Login({ onLoginSuccess }) {
             onChange={(e) => setForm({ ...form, email: e.target.value })}
             style={inputStyle}
             required
+            disabled={locked || loading}
           />
           <input
             type="password"
@@ -66,10 +100,19 @@ function Login({ onLoginSuccess }) {
             onChange={(e) => setForm({ ...form, password: e.target.value })}
             style={inputStyle}
             required
+            disabled={locked || loading}
           />
 
-          <button type="submit" style={buttonStyle}>
-            Đăng nhập
+          <button
+            type="submit"
+            style={locked ? buttonLocked : buttonStyle}
+            disabled={locked || loading}
+          >
+            {locked
+              ? `⏳ Thử lại sau ${countdown}s`
+              : loading
+              ? "🔄 Đang đăng nhập..."
+              : "Đăng nhập"}
           </button>
         </form>
 
@@ -77,7 +120,7 @@ function Login({ onLoginSuccess }) {
           <p
             style={{
               marginTop: "15px",
-              color: message.includes("✅") ? "green" : "red",
+              color: message.startsWith("✅") ? "green" : "red",
               fontWeight: 500,
             }}
           >
@@ -85,7 +128,7 @@ function Login({ onLoginSuccess }) {
           </p>
         )}
 
-        {/* 🔑 Thêm liên kết Forgot password */}
+        {/* 🔑 Forgot password */}
         <p style={{ marginTop: "15px" }}>
           <a
             href="/forgot-password"
@@ -95,7 +138,7 @@ function Login({ onLoginSuccess }) {
           </a>
         </p>
 
-        {/* 🆕 Liên kết đăng ký */}
+        {/* 🆕 Sign up link */}
         <p style={{ marginTop: "10px", fontSize: "14px" }}>
           Chưa có tài khoản?{" "}
           <a
@@ -110,6 +153,7 @@ function Login({ onLoginSuccess }) {
   );
 }
 
+// 💅 Styles
 const inputStyle = {
   width: "100%",
   padding: "12px 14px",
@@ -131,6 +175,12 @@ const buttonStyle = {
   cursor: "pointer",
   marginTop: "10px",
   transition: "0.3s",
+};
+
+const buttonLocked = {
+  ...buttonStyle,
+  backgroundColor: "#6c757d",
+  cursor: "not-allowed",
 };
 
 export default Login;

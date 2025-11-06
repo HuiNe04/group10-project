@@ -12,18 +12,17 @@ const profileRoutes = require("./routes/profile");
 const adminRoutes = require("./routes/admin");
 const passwordRoutes = require("./routes/password");
 const uploadRoutes = require("./routes/upload");
-const logRoutes = require("./routes/logs"); // 🆕 Bổ sung dòng này để xử lý API logs
+const logRoutes = require("./routes/logs");
 
 // ✅ Import middleware
 const { logActivity } = require("./middleware/logActivity");
-const { loginLimiter } = require("./middleware/rateLimitLogin");
 
 const app = express();
 
 // ✅ Middleware cơ bản
 app.use(express.json());
 app.use(cors());
-app.use(logActivity); // 🧠 Ghi log mọi request
+app.use(logActivity);
 
 // ✅ Log request console để dễ debug
 app.use((req, res, next) => {
@@ -39,16 +38,12 @@ mongoose
 
 // ✅ Sử dụng routes
 app.use("/api", userRoutes);
-
-// ⚡ Thêm giới hạn rate limit cho login
-app.use("/api/auth/login", loginLimiter, authRoutes);
-app.use("/api/auth", authRoutes);
-
+app.use("/api/auth", authRoutes); // ✅ chỉ cần dòng này thôi
 app.use("/api", profileRoutes);
 app.use("/api", adminRoutes);
 app.use("/api", passwordRoutes);
 app.use("/api", uploadRoutes);
-app.use("/api", logRoutes); // 🧾 Route ghi log cho Admin
+app.use("/api", logRoutes);
 
 // ✅ Chạy server
 const PORT = process.env.PORT || 5000;
