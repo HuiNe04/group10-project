@@ -9,6 +9,7 @@ import ViewProfile from "./components/ViewProfile";
 import EditProfile from "./components/EditProfile";
 import ForgotPassword from "./components/ForgotPassword";
 import ResetPassword from "./components/ResetPassword";
+import AdminLogs from "./components/AdminLogs"; // ✅ Thêm component hiển thị log
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
@@ -49,11 +50,36 @@ function App() {
             element={isLoggedIn ? <EditProfile /> : <Navigate to="/login" />}
           />
 
+          {/* --- Trang hiển thị log (chỉ Admin truy cập được) --- */}
+          <Route
+            path="/logs"
+            element={
+              (() => {
+                const currentUser = JSON.parse(localStorage.getItem("user") || "null");
+                if (!currentUser || currentUser.role !== "admin") {
+                  return (
+                    <div
+                      style={{
+                        textAlign: "center",
+                        marginTop: "100px",
+                        color: "#333",
+                      }}
+                    >
+                      <h2>🚫 Bạn không có quyền truy cập trang này</h2>
+                      <p>Chỉ tài khoản có vai trò <b>Admin</b> mới xem được nhật ký hệ thống.</p>
+                    </div>
+                  );
+                }
+                return <AdminLogs />;
+              })()
+            }
+          />
+
           {/* --- Trang quản lý User --- */}
           {isLoggedIn ? (
             <Route
               path="/"
-              element={
+element={
                 (() => {
                   const currentUser = JSON.parse(localStorage.getItem("user") || "null");
                   if (!currentUser) return <Navigate to="/login" />;
