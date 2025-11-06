@@ -1,13 +1,21 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 function ResetPassword() {
   const [token, setToken] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
 
+  // 🧭 Tự động lấy token từ URL khi user bấm link trong email
+  useEffect(() => {
+    const urlToken = new URLSearchParams(location.search).get("token");
+    if (urlToken) setToken(urlToken);
+  }, [location]);
+
+  // 🧩 Gửi yêu cầu đặt lại mật khẩu
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -42,13 +50,16 @@ function ResetPassword() {
       <div style={formStyle}>
         <h2>🔑 Đặt lại mật khẩu</h2>
         <form onSubmit={handleSubmit}>
-          <input
-            type="text"
-            placeholder="Nhập token (xem console backend)"
-            value={token}
-            onChange={(e) => setToken(e.target.value)}
-            style={inputStyle}
-          />
+          {/* ✅ Nếu không có token trong URL, hiển thị ô nhập thủ công */}
+          {!token && (
+            <input
+              type="text"
+              placeholder="Nhập token (xem console backend)"
+              value={token}
+              onChange={(e) => setToken(e.target.value)}
+              style={inputStyle}
+            />
+          )}
           <input
             type="password"
             placeholder="Mật khẩu mới"
@@ -65,6 +76,7 @@ function ResetPassword() {
   );
 }
 
+// 💅 Style
 const containerStyle = {
   display: "flex",
   justifyContent: "center",
@@ -79,6 +91,7 @@ const formStyle = {
   borderRadius: "12px",
   textAlign: "center",
   boxShadow: "0 8px 20px rgba(0,0,0,0.1)",
+  width: "400px",
 };
 
 const inputStyle = {
@@ -92,7 +105,7 @@ const inputStyle = {
 };
 
 const buttonStyle = {
-  width: "100%",
+width: "100%",
   padding: "12px",
   backgroundColor: "#28a745",
   border: "none",
