@@ -14,8 +14,6 @@ router.post("/users", authMiddleware, roleMiddleware("admin"), userController.cr
 // PUT update user - admin có thể chỉnh hoặc user tự chỉnh (nếu muốn)
 router.put("/users/:id", authMiddleware, roleMiddleware("admin"), userController.updateUser);
 
-
-
 // DELETE remove user - admin xóa bất kỳ, user có thể xóa chính mình
 router.delete("/users/:id", authMiddleware, userController.deleteUser);
 

@@ -17,49 +17,68 @@ API.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// ♻️ Xử lý tự refresh Access Token khi hết hạn
+// ♻️ Interceptor tự refresh Access Token
 API.interceptors.response.use(
   (res) => res,
   async (error) => {
     const originalRequest = error.config;
+    console.warn("⚠️ Interceptor caught:", {
+      url: originalRequest?.url,
+      status: error.response?.status,
+      msg: error.response?.data?.message,
+    });
 
-    // Nếu backend trả lỗi 403 → Access Token hết hạn
-    if (error.response?.status === 403 && !originalRequest._retry) {
+    // 🧠 Nếu Access Token hết hạn → refresh
+    if ((error.response?.status === 401 || error.response?.status === 403) && !originalRequest._retry) {
       originalRequest._retry = true;
       const refreshToken = localStorage.getItem("refreshToken");
 
-      // Nếu không có refreshToken → logout
       if (!refreshToken) {
-        localStorage.clear();
-        window.location.href = "/login";
+        console.warn("⚠️ Không có refreshToken → logout.");
+        forceLogout();
         return Promise.reject(error);
       }
 
       try {
-        // 🔄 Gửi request làm mới token
-        const response = await axios.post(
+        const res = await axios.post(
           `${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/auth/refresh`,
           { refreshToken }
         );
 
-        const newAccessToken = response.data.accessToken;
+        const newAccessToken = res.data.accessToken;
         if (!newAccessToken) throw new Error("Không nhận được accessToken mới!");
 
-        // ✅ Lưu Access Token mới và gắn lại header
+        console.log("✅ Access Token mới:", newAccessToken);
         localStorage.setItem("token", newAccessToken);
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-
-        // Gửi lại request ban đầu
         return axios(originalRequest);
-      } catch (refreshError) {
-        console.error("❌ Refresh token không hợp lệ, buộc logout:", refreshError.message);
-        localStorage.clear();
-        window.location.href = "/login";
+      } catch (err) {
+        console.error("❌ Refresh token lỗi hoặc hết hạn:", err.message);
+        forceLogout();
+        return Promise.reject(err);
       }
+    }
+
+    // 🚪 Nếu token hết hạn / không hợp lệ → logout
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      console.warn("⚠️ Token không hợp lệ, logout người dùng.");
+      forceLogout();
     }
 
     return Promise.reject(error);
   }
 );
+
+// 🚪 Hàm logout toàn cục
+function forceLogout() {
+  console.log("🚪 [forceLogout] Triggered!");
+  localStorage.removeItem("token");
+  localStorage.removeItem("refreshToken");
+  localStorage.removeItem("user");
+
+  // 🔔 Thông báo App.js cập nhật state
+  window.dispatchEvent(new Event("logout"));
+  window.location.href = "/login";
+}
 
 export default API;

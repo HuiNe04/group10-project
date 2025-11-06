@@ -1,75 +1,68 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
-import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
+import API from "../api/axiosInstance";
+import Swal from "sweetalert2";
 
 function EditProfile() {
   const [form, setForm] = useState({ name: "", password: "", avatar: "" });
   const [uploading, setUploading] = useState(false);
   const navigate = useNavigate();
-  const token = localStorage.getItem("token");
 
   // 🔹 Lấy thông tin user hiện tại
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/profile", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await API.get("/profile");
         setForm({
           name: res.data.name,
           avatar: res.data.avatar || "",
           password: "",
         });
       } catch (err) {
-        Swal.fire("❌ Lỗi", "Không thể tải thông tin người dùng", "error");
+        console.error("❌ Lỗi khi tải thông tin user:", err.message);
+        Swal.fire("❌ Lỗi", "Không thể tải thông tin người dùng!", "error");
       }
     };
     fetchProfile();
-  }, [token]);
+  }, []);
 
   // 🔹 Upload ảnh lên Cloudinary
   const handleAvatarUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+
     const formData = new FormData();
     formData.append("avatar", file);
 
     try {
       setUploading(true);
-      const res = await axios.post("http://localhost:5000/api/upload-avatar", formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
-        },
+      const res = await API.post("/upload-avatar", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
       setForm({ ...form, avatar: res.data.avatar_url });
       Swal.fire("✅ Thành công", "Upload ảnh đại diện thành công!", "success");
     } catch (err) {
-      Swal.fire("❌ Lỗi", "Không thể upload ảnh đại diện", "error");
+      console.error("❌ Lỗi upload:", err.message);
+      Swal.fire("❌ Lỗi", "Không thể upload ảnh đại diện!", "error");
     } finally {
       setUploading(false);
     }
   };
 
-  // 🔹 Cập nhật thông tin user (name, password, avatar)
+  // 🔹 Cập nhật thông tin user
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(
-        "http://localhost:5000/api/profile",
-        {
-          name: form.name,
-          password: form.password || undefined,
-          avatar: form.avatar,
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      Swal.fire("✅ Thành công", "Cập nhật hồ sơ thành công", "success");
+      await API.put("/profile", {
+        name: form.name,
+        password: form.password || undefined,
+        avatar: form.avatar,
+      });
+      Swal.fire("✅ Thành công", "Cập nhật hồ sơ thành công!", "success");
       navigate("/profile");
     } catch (err) {
-      Swal.fire("❌ Lỗi", "Không thể cập nhật hồ sơ", "error");
+      console.error("❌ Lỗi cập nhật hồ sơ:", err.message);
+      Swal.fire("❌ Lỗi", "Không thể cập nhật hồ sơ!", "error");
     }
   };
 
@@ -124,7 +117,6 @@ function EditProfile() {
 
         {/* 🔼 Upload file ảnh */}
         <input type="file" accept="image/*" onChange={handleAvatarUpload} />
-
         {uploading && <p style={{ textAlign: "center" }}>⏳ Đang upload ảnh...</p>}
 
         <div style={{ display: "flex", justifyContent: "space-between" }}>
@@ -144,6 +136,7 @@ function EditProfile() {
   );
 }
 
+// 💅 Style giữ nguyên
 const inputStyle = {
   padding: "10px 12px",
   border: "1px solid #ccc",

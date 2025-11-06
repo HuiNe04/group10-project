@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Login from "./components/Login";
@@ -10,7 +10,6 @@ import EditProfile from "./components/EditProfile";
 import ForgotPassword from "./components/ForgotPassword";
 import ResetPassword from "./components/ResetPassword";
 
-
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
   const [reload, setReload] = useState(false);
@@ -18,10 +17,21 @@ function App() {
   const handleLoginSuccess = () => setIsLoggedIn(true);
   const handleLogout = () => {
     localStorage.removeItem("token");
-    localStorage.removeItem("user"); // 🆕 xóa luôn thông tin user khi logout
+    localStorage.removeItem("user");
+    localStorage.removeItem("refreshToken");
     setIsLoggedIn(false);
   };
   const refreshUsers = () => setReload((prev) => !prev);
+
+  // 🧠 Theo dõi sự kiện logout toàn cục
+  useEffect(() => {
+    const handleAutoLogout = () => {
+      console.log("🧠 [App] logout event received");
+      setIsLoggedIn(false);
+    };
+    window.addEventListener("logout", handleAutoLogout);
+    return () => window.removeEventListener("logout", handleAutoLogout);
+  }, []);
 
   return (
     <Router>
@@ -35,12 +45,13 @@ function App() {
         <Navbar isLoggedIn={isLoggedIn} onLogout={handleLogout} />
 
         <Routes>
-          {/* --- Các route cơ bản --- */}
+          {/* --- Auth --- */}
           <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Login onLoginSuccess={handleLoginSuccess} />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
-          {/* --- Hồ sơ cá nhân --- */}
+
+          {/* --- Profile --- */}
           <Route
             path="/profile"
             element={isLoggedIn ? <ViewProfile /> : <Navigate to="/login" />}
@@ -49,41 +60,27 @@ function App() {
             path="/profile/edit"
             element={isLoggedIn ? <EditProfile /> : <Navigate to="/login" />}
           />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
 
-          {/* --- Trang quản lý user (Admin Only) --- */}
+          {/* --- Admin Dashboard --- */}
           {isLoggedIn ? (
             <Route
               path="/"
               element={
                 (() => {
                   const currentUser = JSON.parse(localStorage.getItem("user") || "null");
-
                   if (!currentUser || currentUser.role !== "admin") {
                     return (
-                      <div
-                        style={{
-                          textAlign: "center",
-                          marginTop: "100px",
-                          color: "#333",
-                        }}
-                      >
+                      <div style={{ textAlign: "center", marginTop: "100px", color: "#333" }}>
                         <h2>🚫 Bạn không có quyền truy cập trang Admin</h2>
-                        <p>Chỉ tài khoản có vai trò <b>Admin</b> mới xem được danh sách người dùng.</p>
+                        <p>
+                          Chỉ tài khoản có vai trò <b>Admin</b> mới xem được danh sách người dùng.
+                        </p>
                       </div>
                     );
                   }
 
-                  // Nếu là admin → hiển thị giao diện quản lý user
                   return (
-                    <div
-                      style={{
-                        padding: "40px 20px",
-                        maxWidth: "1000px",
-                        margin: "0 auto",
-                      }}
-                    >
+                    <div style={{ padding: "40px 20px", maxWidth: "1000px", margin: "0 auto" }}>
                       <h1
                         style={{
                           textAlign: "center",
@@ -93,8 +90,6 @@ function App() {
                       >
                         🌐 Admin Panel – Quản lý người dùng
                       </h1>
-
-                      {/* ✅ Form Thêm user */}
                       <div
                         style={{
                           background: "#fff",
@@ -106,8 +101,6 @@ function App() {
                       >
                         <AddUser onUserAdded={refreshUsers} />
                       </div>
-
-                      {/* ✅ Danh sách user */}
                       <UserList reload={reload} />
                     </div>
                   );
