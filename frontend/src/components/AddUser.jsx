@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import axios from "axios";
+import API from "../api/axiosInstance";
+import Swal from "sweetalert2";
 
 function AddUser({ onUserAdded }) {
   const [form, setForm] = useState({ name: "", email: "", password: "" });
@@ -9,28 +10,37 @@ function AddUser({ onUserAdded }) {
     e.preventDefault();
     const { name, email, password } = form;
 
+    // ⚠️ Kiểm tra dữ liệu đầu vào
     if (!name.trim() || !email.trim()) {
-      alert("⚠️ Vui lòng nhập đầy đủ thông tin!");
+      Swal.fire("⚠️ Lỗi", "Vui lòng nhập đầy đủ thông tin!", "warning");
       return;
     }
     if (!/\S+@\S+\.\S+/.test(email)) {
-      alert("⚠️ Email không hợp lệ!");
+      Swal.fire("⚠️ Lỗi", "Email không hợp lệ!", "warning");
       return;
     }
 
     try {
       setLoading(true);
-      await axios.post("http://localhost:5000/api/users", {
+      await API.post("/users", {
         name,
         email,
-        password: password || "123456", // nếu không nhập sẽ tự tạo
+        password: password || "123456",
       });
-      alert("✅ Thêm user thành công!");
+
+      Swal.fire({
+        icon: "success",
+        title: "✅ Thành công",
+        text: "Đã thêm người dùng mới!",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+
       setForm({ name: "", email: "", password: "" });
-      onUserAdded();
+      onUserAdded && onUserAdded();
     } catch (err) {
       console.error("❌ Lỗi khi thêm user:", err.message);
-      alert("Không thể thêm user! Kiểm tra backend.");
+      Swal.fire("❌ Lỗi", "Không thể thêm người dùng!", "error");
     } finally {
       setLoading(false);
     }
@@ -48,10 +58,18 @@ function AddUser({ onUserAdded }) {
         textAlign: "center",
       }}
     >
-      <h3 style={{ marginBottom: "20px", color: "#333" }}>➕ Thêm người dùng mới</h3>
+      <h3 style={{ marginBottom: "20px", color: "#007bff" }}>
+        ➕ Thêm người dùng mới
+      </h3>
+
       <form
         onSubmit={handleSubmit}
-        style={{ display: "flex", gap: "10px", flexWrap: "wrap", justifyContent: "center" }}
+        style={{
+          display: "flex",
+          gap: "10px",
+          flexWrap: "wrap",
+          justifyContent: "center",
+        }}
       >
         <input
           type="text"
@@ -82,6 +100,7 @@ function AddUser({ onUserAdded }) {
   );
 }
 
+// 💅 Style giữ nguyên
 const inputStyle = {
   flex: 1,
   minWidth: "200px",

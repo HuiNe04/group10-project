@@ -1,22 +1,20 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import API from "../api/axiosInstance";
+import Swal from "sweetalert2";
 
 function ViewProfile() {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
-  const token = localStorage.getItem("token");
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/profile", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await API.get("/profile");
         setUser(res.data);
       } catch (err) {
-        alert("❌ Không thể tải thông tin người dùng!");
-        console.error(err.message);
+        console.error("❌ Lỗi khi tải thông tin user:", err.message);
+        Swal.fire("❌ Lỗi", "Không thể tải thông tin người dùng!", "error");
       }
     };
     fetchProfile();
@@ -36,9 +34,7 @@ function ViewProfile() {
         boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
       }}
     >
-      <h2 style={{ textAlign: "center", color: "#007bff" }}>
-        👤 Thông tin cá nhân
-      </h2>
+      <h2 style={{ textAlign: "center", color: "#007bff" }}>👤 Thông tin cá nhân</h2>
 
       <div style={{ textAlign: "center", margin: "20px 0" }}>
         <img

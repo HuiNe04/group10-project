@@ -1,21 +1,17 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import API from "../api/axiosInstance";
+import Swal from "sweetalert2";
 
 function UserList({ reload, readonly = false }) {
   const [users, setUsers] = useState([]);
   const [editingUser, setEditingUser] = useState(null);
   const [editName, setEditName] = useState("");
   const [editEmail, setEditEmail] = useState("");
-  const API_URL = "http://localhost:5000/api/users";
-  const token = localStorage.getItem("token");
   const currentUser = JSON.parse(localStorage.getItem("user") || "null");
 
-  // 🔹 Lấy danh sách người dùng
   const fetchUsers = async () => {
     try {
-      const res = await axios.get(API_URL, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await API.get("/users");
       setUsers(res.data);
     } catch (err) {
       console.error("❌ Lỗi khi tải danh sách user:", err.message);
@@ -27,23 +23,19 @@ function UserList({ reload, readonly = false }) {
     fetchUsers();
   }, [reload]);
 
-  // 🔹 Xóa user
   const handleDelete = async (id) => {
     if (readonly) return;
     if (!window.confirm("🗑️ Bạn có chắc muốn xóa người dùng này?")) return;
     try {
-      await axios.delete(`${API_URL}/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      alert("✅ Đã xóa user thành công!");
+      await API.delete(`/users/${id}`);
+      Swal.fire("✅ Đã xóa user thành công!", "", "success");
       fetchUsers();
     } catch (err) {
       console.error("❌ Lỗi khi xóa user:", err.message);
-      alert("Không thể xóa user!");
+      Swal.fire("❌ Không thể xóa user!", "", "error");
     }
   };
 
-  // 🔹 Sửa user (hiển thị form)
   const handleEdit = (user) => {
     if (readonly) return;
     setEditingUser(user._id);
@@ -51,20 +43,15 @@ function UserList({ reload, readonly = false }) {
     setEditEmail(user.email);
   };
 
-  // 🔹 Lưu thay đổi
   const handleUpdate = async (id) => {
     try {
-      await axios.put(
-        `${API_URL}/${id}`,
-        { name: editName, email: editEmail },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      alert("💾 Cập nhật thành công!");
+      await API.put(`/users/${id}`, { name: editName, email: editEmail });
+      Swal.fire("💾 Cập nhật thành công!", "", "success");
       setEditingUser(null);
       fetchUsers();
     } catch (err) {
       console.error("❌ Lỗi khi cập nhật user:", err.message);
-      alert("Không thể cập nhật user!");
+      Swal.fire("❌ Không thể cập nhật user!", "", "error");
     }
   };
 
@@ -160,52 +147,11 @@ function UserList({ reload, readonly = false }) {
   );
 }
 
-// 💅 Style
-const inputEdit = {
-  width: "100%",
-  padding: "8px",
-  marginBottom: "6px",
-  border: "1px solid #ccc",
-  borderRadius: "6px",
-  outline: "none",
-};
-
-const editBtn = {
-  background: "#ffc107",
-  border: "none",
-  color: "#fff",
-  padding: "6px 10px",
-  borderRadius: "6px",
-  marginRight: "6px",
-  cursor: "pointer",
-};
-
-const deleteBtn = {
-  background: "#dc3545",
-  border: "none",
-  color: "#fff",
-  padding: "6px 10px",
-  borderRadius: "6px",
-  cursor: "pointer",
-};
-
-const saveBtn = {
-  background: "#28a745",
-  border: "none",
-  color: "#fff",
-  padding: "6px 10px",
-  borderRadius: "6px",
-  marginRight: "6px",
-  cursor: "pointer",
-};
-
-const cancelBtn = {
-  background: "#6c757d",
-  border: "none",
-  color: "#fff",
-  padding: "6px 10px",
-  borderRadius: "6px",
-  cursor: "pointer",
-};
+// 💅 Style giữ nguyên
+const inputEdit = { width: "100%", padding: "8px", marginBottom: "6px", border: "1px solid #ccc", borderRadius: "6px", outline: "none" };
+const editBtn = { background: "#ffc107", border: "none", color: "#fff", padding: "6px 10px", borderRadius: "6px", marginRight: "6px", cursor: "pointer" };
+const deleteBtn = { background: "#dc3545", border: "none", color: "#fff", padding: "6px 10px", borderRadius: "6px", cursor: "pointer" };
+const saveBtn = { background: "#28a745", border: "none", color: "#fff", padding: "6px 10px", borderRadius: "6px", marginRight: "6px", cursor: "pointer" };
+const cancelBtn = { background: "#6c757d", border: "none", color: "#fff", padding: "6px 10px", borderRadius: "6px", cursor: "pointer" };
 
 export default UserList;

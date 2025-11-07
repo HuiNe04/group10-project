@@ -1,18 +1,38 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 function ResetPassword() {
   const [token, setToken] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
 
+  // 🧭 Lấy token từ URL khi user bấm link trong email
+  useEffect(() => {
+    const urlToken = new URLSearchParams(location.search).get("token");
+    if (urlToken) setToken(urlToken);
+  }, [location]);
+
+  // 🚫 Nếu không có token trong URL, báo lỗi
+  if (!token) {
+    return (
+      <div style={containerStyle}>
+        <div style={formStyle}>
+          <h2>🚫 Liên kết không hợp lệ</h2>
+          <p>Vui lòng sử dụng liên kết trong email để đặt lại mật khẩu.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 🧩 Gửi yêu cầu đặt lại mật khẩu
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!token.trim() || !newPassword.trim()) {
-      Swal.fire("⚠️ Lỗi", "Vui lòng nhập đầy đủ token và mật khẩu mới!", "warning");
+    if (!newPassword.trim()) {
+      Swal.fire("⚠️ Lỗi", "Vui lòng nhập mật khẩu mới!", "warning");
       return;
     }
 
@@ -30,7 +50,6 @@ function ResetPassword() {
         timer: 1800,
       });
 
-      // 🕒 Tự động chuyển về trang đăng nhập sau khi reset thành công
       setTimeout(() => navigate("/login"), 1800);
     } catch (err) {
       Swal.fire("❌ Lỗi", err.response?.data?.message || "Không thể đặt lại mật khẩu", "error");
@@ -43,21 +62,14 @@ function ResetPassword() {
         <h2>🔑 Đặt lại mật khẩu</h2>
         <form onSubmit={handleSubmit}>
           <input
-            type="text"
-            placeholder="Nhập token (xem console backend)"
-            value={token}
-            onChange={(e) => setToken(e.target.value)}
-            style={inputStyle}
-          />
-          <input
             type="password"
-            placeholder="Mật khẩu mới"
+            placeholder="Nhập mật khẩu mới"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             style={inputStyle}
           />
           <button type="submit" style={buttonStyle}>
-            Đặt lại mật khẩu
+            Cập nhật mật khẩu
           </button>
         </form>
       </div>
@@ -65,6 +77,7 @@ function ResetPassword() {
   );
 }
 
+// 💅 Style
 const containerStyle = {
   display: "flex",
   justifyContent: "center",
@@ -79,6 +92,7 @@ const formStyle = {
   borderRadius: "12px",
   textAlign: "center",
   boxShadow: "0 8px 20px rgba(0,0,0,0.1)",
+  width: "400px",
 };
 
 const inputStyle = {

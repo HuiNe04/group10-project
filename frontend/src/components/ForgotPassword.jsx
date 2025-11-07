@@ -18,20 +18,20 @@ function ForgotPassword() {
     try {
       const res = await axios.post("http://localhost:5000/api/forgot-password", { email });
 
-      Swal.fire({
-        icon: "success",
-        title: "✅ Thành công",
-        text: "Mã token đã được gửi! (xem trong console backend)",
-        showConfirmButton: false,
-        timer: 1500,
-      });
-
       console.log("👉 Token reset (xem console backend):", res.data.token);
 
-      // 🆕 Tự động chuyển sang trang reset mật khẩu sau 1.5s
-      setTimeout(() => navigate("/reset-password"), 1500);
+      Swal.fire({
+        icon: "success",
+        title: "✅ Đã gửi email!",
+        text: "Vui lòng kiểm tra hộp thư đến hoặc thư rác để nhận liên kết đặt lại mật khẩu.",
+        showConfirmButton: false,
+        timer: 2500,
+      });
+
+      // ⏳ Tự động quay về trang đăng nhập sau 2.5 giây
+      setTimeout(() => navigate("/login"), 2500);
     } catch (err) {
-      Swal.fire("❌ Lỗi", err.response?.data?.message || "Không thể gửi email", "error");
+      Swal.fire("❌ Lỗi", err.response?.data?.message || "Không thể gửi email reset mật khẩu", "error");
     }
   };
 
@@ -39,7 +39,7 @@ function ForgotPassword() {
     <div style={containerStyle}>
       <div style={formStyle}>
         <h2>📧 Quên mật khẩu</h2>
-        <p>Nhập email để nhận mã token đặt lại mật khẩu</p>
+        <p>Nhập email của bạn để nhận liên kết đặt lại mật khẩu</p>
         <form onSubmit={handleSubmit}>
           <input
             type="email"
@@ -49,7 +49,7 @@ function ForgotPassword() {
             style={inputStyle}
           />
           <button type="submit" style={buttonStyle}>
-            Gửi yêu cầu
+            Gửi email đặt lại mật khẩu
           </button>
         </form>
       </div>
@@ -57,12 +57,13 @@ function ForgotPassword() {
   );
 }
 
+// 💅 Style
 const containerStyle = {
   display: "flex",
   justifyContent: "center",
   alignItems: "center",
   height: "100vh",
-  background: "linear-gradient(135deg, #e0c3fc, #8ec5fc)",
+  background: "linear-gradient(135deg, #8ec5fc, #e0c3fc)",
 };
 
 const formStyle = {
@@ -71,6 +72,7 @@ const formStyle = {
   borderRadius: "12px",
   textAlign: "center",
   boxShadow: "0 8px 20px rgba(0,0,0,0.1)",
+  width: "400px",
 };
 
 const inputStyle = {
