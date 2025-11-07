@@ -65,15 +65,26 @@ Dự án **Quản lý người dùng (User Management System)** được xây d�
 
 ---
 
-### Luồng hoạt động:
-1. Người dùng đăng ký → Backend lưu vào MongoDB.  
-2. Đăng nhập → Nhận `AccessToken` + `RefreshToken`.  
-3. Gọi API bằng Bearer Token → Middleware xác thực.  
-4. Hết hạn token → Backend cấp mới bằng Refresh Token.  
-5. Admin có thể xem danh sách người dùng + nhật ký log.  
-6. Người dùng có thể đổi avatar, quên mật khẩu, đổi mật khẩu.
+### 🔄 Luồng hoạt động hệ thống
 
----
+1. 📝 **Người dùng đăng ký**  
+   → Backend lưu thông tin vào **MongoDB**.
+
+2. 🔐 **Đăng nhập**  
+   → Hệ thống trả về **AccessToken** + **RefreshToken**.
+
+3. 🛡️ **Gọi API với Bearer Token**  
+   → Middleware xác thực **AccessToken** trước khi cho phép truy cập tài nguyên.
+
+4. ♻️ **Token hết hạn**  
+   → Backend sử dụng **RefreshToken** để cấp **AccessToken mới**, không cần đăng nhập lại.
+
+5. 🧑‍💼 **Admin**  
+   → Có thể **xem danh sách người dùng** và **nhật ký log hoạt động** trong hệ thống.
+
+6. 🧑 **User**  
+   → Có thể **đổi avatar**, **quên mật khẩu**, **đặt lại mật khẩu** hoặc chỉnh sửa hồ sơ cá nhân.
+
 
 ## 🧰 Hướng dẫn cài đặt & chạy dự án
 
@@ -124,64 +135,76 @@ npm start
 Chạy tại: [http://localhost:3000](http://localhost:3000)
 
 ---
-🧪 Chức năng chính & Flow kiểm thử
-🟢 Đăng ký & Đăng nhập
 
-Đăng ký người dùng mới (/auth/signup)
+## 🧪 Chức năng chính & Flow kiểm thử
 
-Đăng nhập → Nhận AccessToken + RefreshToken
+### 🟢 Đăng ký & Đăng nhập
+- Đăng ký người dùng mới
+- Đăng nhập → Nhận AccessToken + RefreshToken
+- Redux lưu trạng thái đăng nhập
+- Token tự động refresh khi hết hạn
 
-Redux lưu auth.user và auth.isAuthenticated = true
+### 🧑‍💻 Quản lý người dùng (Admin Panel)
+| Role       | Quyền |
+|-----------|-------|
+| Admin     | CRUD User + Xem Log |
+| Moderator | Chỉ xem danh sách  |
+| User      | Xem & chỉnh sửa hồ sơ cá nhân |
 
-Token tự động refresh khi hết hạn
+### 🖼️ Upload Avatar (Cloudinary)
+- Upload ảnh tại trang hồ sơ
+- Ảnh resize tự động 400x400
+- Lưu URL vào MongoDB
 
-🧑‍💻 Quản lý người dùng (Admin Panel)
+### 🔐 Quên mật khẩu / Reset password
+- Gửi email chứa link reset
+- Reset qua `/reset-password?token=...`
 
-Admin có thể thêm / sửa / xóa / xem danh sách người dùng
+### 🧠 Logging & Rate Limiting
+- Ghi log mọi hành động quan trọng
+- Giới hạn đăng nhập sai: 5 lần / phút / email
 
-Moderator chỉ được xem danh sách (chế độ readonly)
+### 🔎 Kiểm thử bằng Postman
 
-User chỉ xem và chỉnh sửa hồ sơ cá nhân
+| API | Method | URL | Mô tả |
+|----|--------|-----|------|
+| Đăng ký | POST | /api/auth/signup | Tạo tài khoản mới |
+| Đăng nhập | POST | /api/auth/login | Nhận token đăng nhập |
+| Refresh Token | POST | /api/auth/refresh | Cấp lại AccessToken |
+| Lấy user info | GET | /api/auth/me | Trả về thông tin user hiện tại |
+| Upload Avatar | POST | /api/upload-avatar | Upload ảnh đại diện |
+| Forgot Password | POST | /api/forgot-password | Gửi mail reset |
+| Reset Password | POST | /api/reset-password | Đặt lại mật khẩu |
+| Xem Logs (Admin) | GET | /api/logs | Lấy danh sách log |
 
-🖼️ Upload ảnh đại diện (Cloudinary)
+---
+### 🧱 Phân quyền (RBAC)
 
-Upload ảnh tại /profile/edit
+| **Role**     | **Quyền hạn / Chức năng**                                      |
+|--------------|----------------------------------------------------------------|
+| **Admin**    | CRUD User, Xem Log hoạt động, Upload Avatar, Quản lý toàn hệ thống |
+| **Moderator**| Chỉ được xem danh sách người dùng (chế độ **read-only**)        |
+| **User**     | Xem và chỉnh sửa **hồ sơ cá nhân** (profile + avatar)           |
 
-Ảnh được resize (400x400) và lưu vào Cloudinary
+---
 
-URL avatar cập nhật trong MongoDB và hiển thị lên UI
+### 🧠 Logging & Rate Limiting
 
-🔐 Quên mật khẩu / Đặt lại mật khẩu
+- Mọi hành động quan trọng như:
+  - Đăng nhập
+  - Đổi mật khẩu
+  - Upload avatar
+  - CRUD User  
+  → **đều được ghi vào collection `logs`** trong MongoDB.
 
-Gửi email thật chứa token reset (qua Gmail SMTP)
+- Hệ thống tự động **giới hạn đăng nhập sai**:
+  ```
+  Tối đa 5 lần thất bại / 1 phút / 1 email
+  ```
+  Nếu vượt giới hạn → tài khoản bị tạm khóa đăng nhập trong thời gian ngắn.
 
-Người dùng truy cập link /reset-password?token=...
+- Khi bị giới hạn, hệ thống sẽ **ghi log sự kiện `LOGIN_RATE_LIMIT`** vào DB để phục vụ theo dõi bảo mật.
 
-Cập nhật mật khẩu mới thành công
-
-🧱 Phân quyền (RBAC)
-Role	Quyền
-Admin	CRUD User + Xem Log + Upload Avatar
-Moderator	Chỉ xem danh sách người dùng
-User	Chỉ xem & sửa hồ sơ cá nhân
-🧠 Logging & Rate Limiting
-
-Mọi hành động quan trọng (login, CRUD, upload) được ghi vào collection logs.
-
-Tự động giới hạn đăng nhập sai: 5 lần / 1 phút / 1 email.
-
-Ghi log hành vi rate-limit (LOGIN_RATE_LIMIT) vào DB.
-
-🔎 Kiểm thử với Postman
-API	Method	URL	Mô tả
-Đăng ký	POST	/api/auth/signup	Tạo tài khoản mới
-Đăng nhập	POST	/api/auth/login	Lấy AccessToken + RefreshToken
-Refresh Token	POST	/api/auth/refresh	Cấp lại AccessToken
-Lấy user info	GET	/api/auth/me	Trả về thông tin người dùng hiện tại
-Upload Avatar	POST	/api/upload-avatar	Upload file ảnh đại diện
-Forgot Password	POST	/api/forgot-password	Gửi token reset qua email
-Reset Password	POST	/api/reset-password	Đặt lại mật khẩu
-Xem Logs (Admin)	GET	/api/logs	Lấy danh sách log hoạt động
 ## 🛋️ Cấu trúc dự án
 
 ### 💡 Backend
@@ -301,4 +324,5 @@ Dự án **Group10 – User Management System** hoàn thiện đầy đủ backe
 * MongoDB Atlas + Express REST API
 
 🎯 Kết hợp các công nghệ hiện đại, giúp nhóm nắm vững quy trình phát triển ứng dụng web từ A → Z.
+
 
