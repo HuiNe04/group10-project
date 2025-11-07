@@ -1,18 +1,22 @@
 const express = require("express");
 const router = express.Router();
 const authController = require("../controllers/authController");
-const { loginLimiter } = require("../middleware/rateLimitLogin"); // ✅ thêm dòng này
+const { authMiddleware } = require("../middleware/authMiddleware");
+const { loginLimiter } = require("../middleware/rateLimitLogin");
 
-// Đăng ký
+// 🧠 Đăng ký
 router.post("/signup", authController.signup);
 
-// Đăng nhập (giới hạn tốc độ)
-router.post("/login", loginLimiter, authController.login); // ✅ áp dụng limiter
+// 🔐 Đăng nhập (giới hạn tốc độ)
+router.post("/login", loginLimiter, authController.login);
 
-// Refresh token
+// 👤 Lấy thông tin user từ Access Token (Redux)
+router.get("/me", authMiddleware, authController.getMe);
+
+// 🔁 Refresh token
 router.post("/refresh", authController.refresh);
 
-// Đăng xuất
-router.post("/logout", authController.logout);
+// 🚪 Logout
+router.post("/logout", authMiddleware, authController.logout);
 
 module.exports = router;

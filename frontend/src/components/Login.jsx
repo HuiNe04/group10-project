@@ -1,16 +1,20 @@
 import React, { useState, useEffect } from "react";
-import API from "../api/axiosInstance";
+import { useDispatch, useSelector } from "react-redux";
+import { loginUser } from "../features/authSlice"; // 🧩 Redux thunk
 import { useNavigate } from "react-router-dom";
 
-function Login({ onLoginSuccess }) {
-  const [form, setForm] = useState({ email: "", password: "" });
-  const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [locked, setLocked] = useState(false);
-  const [countdown, setCountdown] = useState(0); // ⏳ đếm ngược thời gian chờ
+function Login() {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  // 🕒 Tự động đếm ngược
+  const [form, setForm] = useState({ email: "", password: "" });
+  const [message, setMessage] = useState("");
+  const [locked, setLocked] = useState(false);
+  const [countdown, setCountdown] = useState(0);
+
+  const { loading, isAuthenticated } = useSelector((state) => state.auth);
+
+  // 🕒 Đếm ngược khi bị khóa
   useEffect(() => {
     if (locked && countdown > 0) {
       const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
@@ -21,7 +25,7 @@ function Login({ onLoginSuccess }) {
     }
   }, [locked, countdown]);
 
-  // 🧠 Gửi yêu cầu đăng nhập
+  // 🧠 Gửi yêu cầu đăng nhập qua Redux Thunk
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (locked) {
@@ -29,36 +33,38 @@ function Login({ onLoginSuccess }) {
       return;
     }
 
-    setLoading(true);
     setMessage("");
-
     try {
-      const res = await API.post("/auth/login", form);
-      localStorage.setItem("token", res.data.accessToken);
-      localStorage.setItem("refreshToken", res.data.refreshToken);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
+      const result = await dispatch(loginUser(form));
 
-      setMessage("✅ Đăng nhập thành công!");
-      if (onLoginSuccess) onLoginSuccess();
-      setTimeout(() => navigate("/"), 1000);
-    } catch (err) {
-      const status = err.response?.status;
-      const msg = err.response?.data?.message;
-
-      // ⚠️ Nếu bị rate limit
-      if (status === 429) {
-        setMessage("🚫 Bạn đã thử đăng nhập quá nhiều lần. Vui lòng thử lại sau 60 giây.");
-        setLocked(true);
-        setCountdown(60);
+      // 🟢 Nếu đăng nhập thành công
+      if (result.meta.requestStatus === "fulfilled") {
+        setMessage("✅ Đăng nhập thành công!");
+        setTimeout(() => navigate("/"), 1000);
       } else {
-        // ❌ Sai mật khẩu → xóa trường password
-        setMessage("❌ Sai email hoặc mật khẩu!");
-        setForm({ ...form, password: "" });
+        const status = result.payload?.status || result.error?.status;
+        const msg = result.payload?.message || "Đăng nhập thất bại.";
+
+        // ⚠️ Nếu bị rate limit
+        if (status === 429 || msg.includes("quá nhiều")) {
+          setMessage("🚫 Bạn đã thử đăng nhập quá nhiều lần. Vui lòng thử lại sau 60 giây.");
+          setLocked(true);
+          setCountdown(60);
+        } else {
+          setMessage("❌ Sai email hoặc mật khẩu!");
+          setForm({ ...form, password: "" });
+        }
       }
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      console.error("❌ Lỗi đăng nhập:", err);
+      setMessage("❌ Đăng nhập thất bại, thử lại sau!");
     }
   };
+
+  // Nếu đã login → chuyển về trang chủ
+  useEffect(() => {
+    if (isAuthenticated) navigate("/");
+  }, [isAuthenticated, navigate]);
 
   return (
     <div
@@ -128,23 +134,17 @@ function Login({ onLoginSuccess }) {
           </p>
         )}
 
-        {/* 🔑 Forgot password */}
+        {/* 🔑 Quên mật khẩu */}
         <p style={{ marginTop: "15px" }}>
-          <a
-            href="/forgot-password"
-            style={{ color: "#007bff", textDecoration: "none" }}
-          >
+          <a href="/forgot-password" style={{ color: "#007bff", textDecoration: "none" }}>
             🔑 Quên mật khẩu?
           </a>
         </p>
 
-        {/* 🆕 Sign up link */}
+        {/* 🆕 Đăng ký */}
         <p style={{ marginTop: "10px", fontSize: "14px" }}>
           Chưa có tài khoản?{" "}
-          <a
-            href="/signup"
-            style={{ color: "#007bff", textDecoration: "none", fontWeight: 500 }}
-          >
+          <a href="/signup" style={{ color: "#007bff", textDecoration: "none", fontWeight: 500 }}>
             Đăng ký ngay
           </a>
         </p>
@@ -153,7 +153,7 @@ function Login({ onLoginSuccess }) {
   );
 }
 
-// 💅 Styles
+// 💅 Style giữ nguyên
 const inputStyle = {
   width: "100%",
   padding: "12px 14px",

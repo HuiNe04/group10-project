@@ -38,8 +38,9 @@ function ViewProfile() {
 
       <div style={{ textAlign: "center", margin: "20px 0" }}>
         <img
-          src={user.avatar || "https://via.placeholder.com/120"}
+          src={user.avatar || "https://placehold.co/120x120?text=User&font=roboto"}
           alt="Avatar"
+          onError={(e) => (e.target.src = "/fallback.png")}
           style={{
             width: "120px",
             height: "120px",

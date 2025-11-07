@@ -115,8 +115,9 @@ function EditProfile() {
         {/* 🖼️ Hiển thị ảnh hiện tại hoặc preview ảnh mới */}
         <div style={{ textAlign: "center" }}>
           <img
-            src={preview || "https://via.placeholder.com/120"}
+            src={form.avatar || "https://placehold.co/120x120?text=Avatar"}
             alt="avatar"
+            onError={(e) => { e.target.src = "/fallback.png"; }}
             style={{
               width: "120px",
               height: "120px",
