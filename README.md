@@ -2,67 +2,70 @@
 
 ## 👋 Giới thiệu
 
-Dự án **Quản lý người dùng (User Management System)** được phát triển bởi **Group 10**, nhằm thực hành quy trình xây dựng ứng dụng web **Fullstack (Frontend + Backend + Database)**.
+Dự án **Quản lý người dùng (User Management System)** được xây dựng nhằm giúp nhóm **Group 10** thực hành quy trình phát triển ứng dụng web **Fullstack (Frontend + Backend + Database)**.
 
-Ứng dụng cho phép:
-- 👥 Đăng ký / Đăng nhập / Phân quyền (User / Moderator / Admin)
-- 🖼️ Upload ảnh đại diện (Cloudinary)
-- 🔐 Đặt lại mật khẩu qua email thật (Gmail SMTP)
-- 🚫 Giới hạn đăng nhập sai (Rate Limiting)
-- 🧠 Ghi log hoạt động người dùng (Logging)
-- 🧱 Bảo vệ route bằng Redux + Protected Routes
+🔊  Ứng dụng hỗ trợ:
+
+* 👥 Đăng ký, đăng nhập, phân quyền (User / Moderator / Admin)
+* 🖼️ Upload ảnh đại diện (Cloudinary)
+* 🔐 Đổi, quên mật khẩu (qua email thật với Gmail SMTP)
+* 🚫 Giới hạn đăng nhập sai (Rate Limiting)
+* 🧠 Quản lý nhật ký hoạt động (Activity Logging)
+* 🧱️ Bảo vệ route với Redux + Protected Routes
 
 ---
 
 ## 🎯 Mục tiêu dự án
-- Ứng dụng **ReactJS, Redux Toolkit, NodeJS, ExpressJS, MongoDB (Mongoose)**.
-- Hiểu rõ mô hình **Client–Server** và quy trình CRUD.
-- Thực hành sử dụng **Git/GitHub**: branch, merge, pull request.
-- Triển khai bảo mật thực tế: JWT Auth, Refresh Token, Rate Limiting.
-- Tích hợp dịch vụ đám mây: **Cloudinary, Gmail SMTP**.
+
+* Áp dụng kiến thức **ReactJS, Redux Toolkit, NodeJS, Express, MongoDB (Mongoose)**.
+* Hiểu rõ mô hình **Client–Server** và quy trình **CRUD (Create – Read – Update – Delete)**.
+* Thực hành quản lý nhóm, sử dụng **Git / GitHub** (branch, commit, merge, pull request).
+* Làm quen với các kỹ thuật bảo mật cơ bản: JWT Authentication, Refresh Token, Rate Limit.
+* Tích hợp dịch vụ đám mây: **Cloudinary**, **Gmail SMTP**.
 
 ---
 
 ## 👨‍💻 Thành viên nhóm
-| Họ tên | Vai trò | Nhiệm vụ |
-|--------|----------|-----------|
-| **Nguyễn Châu Trường Huy** | Database & Quản lý nhóm | Thiết kế, quản lý CSDL MongoDB Atlas, kết nối Mongoose |
-| **Võ Văn Khanh** | Backend Developer | Xây dựng API RESTful (Auth, User, Logs, Upload, Rate Limit, Refresh Token) |
-| **Đoàn Thị Huyền Anh** | Frontend Developer | Xây dựng UI ReactJS, Redux Toolkit, Role-based Protected Routes |
+
+| Họ tên                     | Vai trò                 | Nhiệm vụ                                                                                                    |
+| -------------------------- | ----------------------- | ----------------------------------------------------------------------------------------------------------- |
+| **Nguyễn Châu Trường Huy** | Database & Quản lý nhóm | Thiết kế và quản lý CSDL MongoDB Atlas, kết nối Mongoose, kiểm thử dữ liệu                                  |
+| **Võ Văn Khanh**           | Backend Developer       | Xây dựng RESTful API (Auth, User, Upload, Log, Rate Limit), Middleware bảo mật, JWT, Refresh Token          |
+| **Đoàn Thị Huyền Anh**     | Frontend Developer      | Thiết kế giao diện bằng ReactJS, Redux Toolkit, gọi API bằng Axios, xử lý Protected Routes và UI role-based |
 
 ---
 
 ## ⚙️ Công nghệ sử dụng
-| Thành phần | Công nghệ |
-|-------------|------------|
-| **Frontend** | ReactJS, Redux Toolkit, Axios, React Router |
-| **Backend** | Node.js, Express.js, JWT, Multer, Cloudinary SDK, BcryptJS |
-| **Database** | MongoDB Atlas + Mongoose |
-| **Email Service** | Nodemailer (Gmail SMTP) |
-| **Storage** | Cloudinary |
-| **Bảo mật** | JWT, Refresh Token, Role-based Access Control |
-| **Công cụ** | VSCode, Postman, Git, npm, Redux DevTools |
+
+| Thành phần         | Công nghệ                                                            |
+| ------------------ | -------------------------------------------------------------------- |
+| **Frontend**       | ReactJS, Redux Toolkit, Axios, React Router DOM                      |
+| **Backend**        | Node.js, Express.js, JWT, Multer, Cloudinary SDK, BcryptJS           |
+| **Database**       | MongoDB Atlas + Mongoose ODM                                         |
+| **Email Service**  | Nodemailer (Gmail SMTP)                                              |
+| **Storage**        | Cloudinary (Upload Avatar)                                           |
+| **Security**       | JWT Access + Refresh Tokens, Role-based Access (RBAC), Rate Limiting |
+| **Công cụ hỗ trợ** | Postman, VSCode, Git/GitHub, npm, Redux DevTools                     |
 
 ---
 
-## 🧩 Kiến trúc hệ thống
+## 🧹 Kiến trúc hệ thống
 
+```
 [ ReactJS (Frontend) ]
-⬇️
+        ⬇️
 [ Axios + Redux ]
-⬇️
+        ⬇️
 [ ExpressJS API (Backend) ]
-⬇️
+        ⬇️
 [ MongoDB Atlas (Database) ]
-⬇️
-[ Cloudinary / Gmail SMTP (Service Integrations) ]
-
-yaml
-Copy code
+        ⬇️
+[ Cloudinary / Nodemailer (Service Integrations) ]
+```
 
 ---
 
-### 🔄 Luồng hoạt động:
+### Luồng hoạt động:
 1. Người dùng đăng ký → Backend lưu vào MongoDB.  
 2. Đăng nhập → Nhận `AccessToken` + `RefreshToken`.  
 3. Gọi API bằng Bearer Token → Middleware xác thực.  
@@ -76,12 +79,13 @@ Copy code
 
 ### ⚙️ 1. Chuẩn bị môi trường
 - Cài đặt **Node.js >= 18**
+- Cài đặt **npm** (đi kèm Node)
 - Tạo tài khoản **MongoDB Atlas** và **Cloudinary**
-- Kích hoạt **App Password Gmail** (cho Nodemailer)
+- Tạo ứng dụng Gmail & bật “App Password” (cho Nodemailer)
 
 ---
 
-### 📄 2. Cấu hình `.env` (trong thư mục `backend`)
+### 📄 2. Cấu hình `.env` (đặt trong thư mục `backend`)
 ```env
 PORT=5000
 MONGO_URI=mongodb+srv://Hui:Huy201104@cluster0.i0qbyri.mongodb.net/groupDB?retryWrites=true&w=majority
@@ -98,81 +102,93 @@ REFRESH_TOKEN_EXPIRE_DAYS=7
 EMAIL_USER=nguyenchautruonghuy@gmail.com
 EMAIL_PASS=dnbu izfy mxmq nzvm
 CLIENT_URL=http://localhost:3000
-🚀 3. Cài đặt Backend
-bash
-Copy code
+
+## 🔧 Hướng dẫn cài đặt
+
+### 1. Backend
+
+```bash
 cd backend
 npm install
 npm start
-Server chạy tại: http://localhost:5000
+```
 
-💻 4. Cài đặt Frontend
-bash
-Copy code
+Chạy tại: [http://localhost:5000](http://localhost:5000)
+
+### 2. Frontend
+
+```bash
 cd frontend
 npm install
 npm start
-Ứng dụng chạy tại: http://localhost:3000
+```
 
-🧪 Chức năng & Flow kiểm thử
+Chạy tại: [http://localhost:3000](http://localhost:3000)
+
+---
+🧪 Chức năng chính & Flow kiểm thử
 🟢 Đăng ký & Đăng nhập
-POST /auth/signup – đăng ký người dùng mới
 
-POST /auth/login – nhận AccessToken + RefreshToken
+Đăng ký người dùng mới (/auth/signup)
 
-Redux lưu auth.user, isAuthenticated = true
+Đăng nhập → Nhận AccessToken + RefreshToken
 
-Tự động refresh token khi hết hạn
+Redux lưu auth.user và auth.isAuthenticated = true
+
+Token tự động refresh khi hết hạn
 
 🧑‍💻 Quản lý người dùng (Admin Panel)
-Admin: thêm / sửa / xóa / xem người dùng
 
-Moderator: chỉ xem danh sách
+Admin có thể thêm / sửa / xóa / xem danh sách người dùng
 
-User: xem & chỉnh sửa hồ sơ cá nhân
+Moderator chỉ được xem danh sách (chế độ readonly)
+
+User chỉ xem và chỉnh sửa hồ sơ cá nhân
 
 🖼️ Upload ảnh đại diện (Cloudinary)
-Upload tại /profile/edit
 
-Ảnh resize 400x400, lưu Cloudinary
+Upload ảnh tại /profile/edit
 
-URL cập nhật MongoDB và hiển thị lại trên UI
+Ảnh được resize (400x400) và lưu vào Cloudinary
+
+URL avatar cập nhật trong MongoDB và hiển thị lên UI
 
 🔐 Quên mật khẩu / Đặt lại mật khẩu
-Gửi email chứa link reset token
 
-Người dùng truy cập /reset-password?token=...
+Gửi email thật chứa token reset (qua Gmail SMTP)
 
-Nhập mật khẩu mới → cập nhật thành công
+Người dùng truy cập link /reset-password?token=...
+
+Cập nhật mật khẩu mới thành công
 
 🧱 Phân quyền (RBAC)
 Role	Quyền
 Admin	CRUD User + Xem Log + Upload Avatar
 Moderator	Chỉ xem danh sách người dùng
-User	Xem & sửa hồ sơ cá nhân
-
+User	Chỉ xem & sửa hồ sơ cá nhân
 🧠 Logging & Rate Limiting
-Mọi hành động (login, CRUD, upload) được ghi vào logs.
 
-Giới hạn đăng nhập: 5 lần / 1 phút / mỗi email.
+Mọi hành động quan trọng (login, CRUD, upload) được ghi vào collection logs.
 
-Ghi log LOGIN_RATE_LIMIT khi vi phạm.
+Tự động giới hạn đăng nhập sai: 5 lần / 1 phút / 1 email.
+
+Ghi log hành vi rate-limit (LOGIN_RATE_LIMIT) vào DB.
 
 🔎 Kiểm thử với Postman
 API	Method	URL	Mô tả
 Đăng ký	POST	/api/auth/signup	Tạo tài khoản mới
 Đăng nhập	POST	/api/auth/login	Lấy AccessToken + RefreshToken
 Refresh Token	POST	/api/auth/refresh	Cấp lại AccessToken
-Lấy user info	GET	/api/auth/me	Trả thông tin người dùng
-Upload Avatar	POST	/api/upload-avatar	Upload ảnh đại diện
-Forgot Password	POST	/api/forgot-password	Gửi token reset
+Lấy user info	GET	/api/auth/me	Trả về thông tin người dùng hiện tại
+Upload Avatar	POST	/api/upload-avatar	Upload file ảnh đại diện
+Forgot Password	POST	/api/forgot-password	Gửi token reset qua email
 Reset Password	POST	/api/reset-password	Đặt lại mật khẩu
-Xem Logs (Admin)	GET	/api/logs	Danh sách hoạt động
+Xem Logs (Admin)	GET	/api/logs	Lấy danh sách log hoạt động
+## 🛋️ Cấu trúc dự án
 
-📂 Cấu trúc dự án
-🧱 Backend
-pgsql
-Copy code
+### 💡 Backend
+
+```
 backend/
 ├── config/
 │   ├── cloudinary.js
@@ -202,10 +218,14 @@ backend/
 │   ├── logs.js
 │   ├── profile.js
 │   └── password.js
+├── .env
+├── package.json
 └── server.js
-🖥️ Frontend
-pgsql
-Copy code
+```
+
+### 🖥️ Frontend
+
+```
 frontend/
 ├── src/
 │   ├── api/
@@ -228,10 +248,15 @@ frontend/
 │   │   └── ViewProfile.jsx
 │   ├── App.js
 │   └── index.js
-└── package.json
-🧩 Redux Store (Frontend)
-json
-Copy code
+├── package.json
+└── .gitignore
+```
+
+---
+
+## 🦉 Redux Store (Frontend)
+
+```json
 {
   "auth": {
     "user": {
@@ -250,18 +275,31 @@ Copy code
     "error": null
   }
 }
-🏁 Kết luận
-Dự án Group10 – User Management System là sản phẩm Fullstack hoàn chỉnh với đầy đủ tính năng hiện đại:
+```
 
-JWT Authentication + Refresh Token
+---
 
-Upload Avatar (Cloudinary)
+## 🔗 Chức năng nổi bật
 
-Email Reset Password
+* 🔑 JWT Authentication + Refresh Token
+* 🔐 Quên / Đặt lại mật khẩu (qua email thật)
+* 🖼️ Upload Avatar (Cloudinary)
+* 📈 Admin xem Log hệ thống
+* 🚫 Rate limit login sai (5 lần / 1 phút / email)
+* 🔰 Role-based UI (Admin / Moderator / User)
+* 🧰 Redux State Management + Protected Routes
 
-Role-based UI + API
+---
 
-Redux State Management
+## 💡 Kết luận
 
-MongoDB + Express REST API
+Dự án **Group10 – User Management System** hoàn thiện đầy đủ backend – frontend, áp dụng nhiều kỹ thuật thực tế:
 
+* JWT + Refresh Token Rotation
+* Cloudinary Image Upload
+* Email Reset Flow (SMTP)
+* Role-based Access & Protected Routes
+* Redux Toolkit + Axios Instance
+* MongoDB Atlas + Express REST API
+
+🎯 Kết hợp các công nghệ hiện đại, giúp nhóm nắm vững quy trình phát triển ứng dụng web từ A → Z.
