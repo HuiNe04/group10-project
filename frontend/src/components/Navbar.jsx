@@ -1,39 +1,24 @@
 // src/components/Navbar.jsx
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import API from "../api/axiosInstance";
+import { useSelector, useDispatch } from "react-redux";
+import { logoutUser } from "../features/authSlice";
 
-function Navbar({ isLoggedIn, onLogout }) {
+function Navbar() {
   const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem("user") || "null");
+  const dispatch = useDispatch();
+  const { isAuthenticated, user } = useSelector((state) => state.auth);
 
   const handleLogout = async () => {
     if (!window.confirm("Bạn có chắc muốn đăng xuất?")) return;
-
-    try {
-      const refreshToken = localStorage.getItem("refreshToken");
-      if (refreshToken) {
-        await API.post("/auth/logout", { refreshToken });
-      }
-    } catch (err) {
-      console.warn("⚠️ Lỗi khi gọi API logout:", err.message);
-    } finally {
-      localStorage.clear();
-      if (onLogout) onLogout();
-      navigate("/login");
-    }
+    await dispatch(logoutUser());
+    navigate("/login");
   };
 
   const handleLogoClick = () => {
-    if (!isLoggedIn) {
-      navigate("/");
-      return;
-    }
-    if (user?.role === "admin" || user?.role === "moderator") {
-      navigate("/");
-    } else {
-      navigate("/profile");
-    }
+    if (!isAuthenticated) return navigate("/");
+    if (user?.role === "admin" || user?.role === "moderator") navigate("/");
+    else navigate("/profile");
   };
 
   return (
@@ -57,7 +42,7 @@ function Navbar({ isLoggedIn, onLogout }) {
       </h2>
 
       <div>
-        {!isLoggedIn ? (
+        {!isAuthenticated ? (
           <>
             <button style={navBtn} onClick={() => navigate("/signup")}>
               Đăng ký
@@ -68,7 +53,7 @@ function Navbar({ isLoggedIn, onLogout }) {
           </>
         ) : (
           <>
-            {/* 🧩 Menu riêng cho Admin */}
+            {/* 🧩 Menu cho Admin */}
             {user?.role === "admin" && (
               <>
                 <button style={navBtn} onClick={() => navigate("/")}>
@@ -90,14 +75,13 @@ function Navbar({ isLoggedIn, onLogout }) {
               </button>
             )}
 
-            {/* 🧩 User bình thường */}
+            {/* 🧩 Hồ sơ & Logout */}
             <button
               style={{ ...navBtn, background: "#17a2b8" }}
               onClick={() => navigate("/profile")}
             >
               👤 Hồ sơ
             </button>
-
             <button
               style={{ ...navBtn, background: "#dc3545" }}
               onClick={handleLogout}

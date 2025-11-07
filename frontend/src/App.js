@@ -1,5 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
+import { loadUser } from "./features/authSlice";
+
 import Navbar from "./components/Navbar";
 import Login from "./components/Login";
 import Signup from "./components/Signup";
@@ -9,18 +12,21 @@ import ViewProfile from "./components/ViewProfile";
 import EditProfile from "./components/EditProfile";
 import ForgotPassword from "./components/ForgotPassword";
 import ResetPassword from "./components/ResetPassword";
-import AdminLogs from "./components/AdminLogs"; // ✅ Thêm component hiển thị log
+import AdminLogs from "./components/AdminLogs";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
+  const dispatch = useDispatch();
+  const { isAuthenticated, user } = useSelector((state) => state.auth);
   const [reload, setReload] = useState(false);
-
-  const handleLoginSuccess = () => setIsLoggedIn(true);
-  const handleLogout = () => {
-    localStorage.clear();
-    setIsLoggedIn(false);
-  };
   const refreshUsers = () => setReload((prev) => !prev);
+
+  // 🧠 Khi mở lại trang -> Redux tự load user từ token
+  useEffect(() => {
+    if (localStorage.getItem("token")) {
+      dispatch(loadUser());
+    }
+  }, [dispatch]);
 
   return (
     <Router>
@@ -31,129 +37,116 @@ function App() {
           fontFamily: "Poppins, sans-serif",
         }}
       >
-        <Navbar isLoggedIn={isLoggedIn} onLogout={handleLogout} />
+        <Navbar isLoggedIn={isAuthenticated} />
 
         <Routes>
           {/* --- Auth routes --- */}
           <Route path="/signup" element={<Signup />} />
-          <Route path="/login" element={<Login onLoginSuccess={handleLoginSuccess} />} />
+          <Route path="/login" element={<Login />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
 
-          {/* --- Hồ sơ cá nhân: tất cả role đều vào được --- */}
+          {/* --- Hồ sơ cá nhân (Protected) --- */}
           <Route
             path="/profile"
-            element={isLoggedIn ? <ViewProfile /> : <Navigate to="/login" />}
+            element={
+              <ProtectedRoute>
+                <ViewProfile />
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/profile/edit"
-            element={isLoggedIn ? <EditProfile /> : <Navigate to="/login" />}
-          />
-
-          {/* --- Trang hiển thị log (chỉ Admin truy cập được) --- */}
-          <Route
-            path="/logs"
             element={
-              (() => {
-                const currentUser = JSON.parse(localStorage.getItem("user") || "null");
-                if (!currentUser || currentUser.role !== "admin") {
-                  return (
-                    <div
-                      style={{
-                        textAlign: "center",
-                        marginTop: "100px",
-                        color: "#333",
-                      }}
-                    >
-                      <h2>🚫 Bạn không có quyền truy cập trang này</h2>
-                      <p>Chỉ tài khoản có vai trò <b>Admin</b> mới xem được nhật ký hệ thống.</p>
-                    </div>
-                  );
-                }
-                return <AdminLogs />;
-              })()
+              <ProtectedRoute>
+                <EditProfile />
+              </ProtectedRoute>
             }
           />
 
-          {/* --- Trang quản lý User --- */}
-          {isLoggedIn ? (
-            <Route
-              path="/"
-element={
-                (() => {
-                  const currentUser = JSON.parse(localStorage.getItem("user") || "null");
-                  if (!currentUser) return <Navigate to="/login" />;
+          {/* --- Trang Logs (Admin Only) --- */}
+          <Route
+            path="/logs"
+            element={
+              <ProtectedRoute roles={["admin"]}>
+                <AdminLogs />
+              </ProtectedRoute>
+            }
+          />
 
-                  // ✅ ADMIN: CRUD user
-                  if (currentUser.role === "admin") {
-                    return (
-                      <div
-                        style={{
-                          padding: "40px 20px",
-                          maxWidth: "1000px",
-                          margin: "0 auto",
-                        }}
-                      >
-                        <h1
-                          style={{
-                            textAlign: "center",
-                            color: "#007bff",
-                            marginBottom: "25px",
-                          }}
-                        >
-                          🌐 Admin Panel – Quản lý người dùng
-                        </h1>
+          {/* --- Trang quản lý người dùng --- */}
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute roles={["admin", "moderator", "user"]}>
+                {user?.role === "admin" ? (
+                  <div
+                    style={{
+                      padding: "40px 20px",
+                      maxWidth: "1000px",
+                      margin: "0 auto",
+                    }}
+                  >
+                    <h1
+                      style={{
+                        textAlign: "center",
+                        color: "#007bff",
+                        marginBottom: "25px",
+                      }}
+                    >
+                      🌐 Admin Panel – Quản lý người dùng
+                    </h1>
 
-                        <div
-                          style={{
-                            background: "#fff",
-                            padding: "20px",
-                            borderRadius: "12px",
-                            boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                            marginBottom: "30px",
-                          }}
-                        >
-                          <AddUser onUserAdded={refreshUsers} />
-                        </div>
+                    <div
+                      style={{
+                        background: "#fff",
+                        padding: "20px",
+                        borderRadius: "12px",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                        marginBottom: "30px",
+                      }}
+                    >
+                      <AddUser onUserAdded={refreshUsers} />
+                    </div>
 
-                        <UserList reload={reload} readonly={false} />
-                      </div>
-                    );
-                  }
+                    <UserList reload={reload} readonly={false} />
+                  </div>
+                ) : user?.role === "moderator" ? (
+                  <div
+                    style={{
+                      padding: "40px 20px",
+                      maxWidth: "1000px",
+                      margin: "0 auto",
+                    }}
+                  >
+                    <h1
+                      style={{
+                        textAlign: "center",
+                        color: "#28a745",
+                        marginBottom: "25px",
+                      }}
+                    >
+                      👀 Moderator – Xem danh sách người dùng
+                    </h1>
+                    <UserList reload={reload} readonly={true} />
+                  </div>
+                ) : (
+                  <Navigate to="/profile" />
+                )}
+              </ProtectedRoute>
+            }
+          />
 
-                  // ✅ MODERATOR: chỉ xem danh sách user
-                  if (currentUser.role === "moderator") {
-                    return (
-                      <div
-                        style={{
-                          padding: "40px 20px",
-                          maxWidth: "1000px",
-                          margin: "0 auto",
-                        }}
-                      >
-                        <h1
-                          style={{
-                            textAlign: "center",
-                            color: "#28a745",
-                            marginBottom: "25px",
-                          }}
-                        >
-                          👀 Moderator – Xem danh sách người dùng
-                        </h1>
-
-                        <UserList reload={reload} readonly={true} />
-                      </div>
-                    );
-                  }
-
-                  // ✅ USER: chuyển về hồ sơ cá nhân
-                  return <Navigate to="/profile" />;
-                })()
-              }
-            />
-          ) : (
-            <Route path="/" element={<Navigate to="/login" />} />
-          )}
+          {/* --- Fallback: Nếu route không tồn tại --- */}
+          <Route
+            path="*"
+            element={
+              <div style={{ textAlign: "center", marginTop: "100px", color: "#555" }}>
+                <h2>🚫 Trang không tồn tại</h2>
+                <p>Vui lòng quay lại <a href="/">trang chủ</a>.</p>
+              </div>
+            }
+          />
         </Routes>
       </div>
     </Router>

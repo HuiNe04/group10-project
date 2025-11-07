@@ -1,32 +1,32 @@
-// controllers/authController.js 
+// controllers/authController.js
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const RefreshToken = require("../models/RefreshToken");
+const Log = require("../models/Log");
 
-// --- Cấu hình thời gian sống (đọc từ .env hoặc mặc định) ---
+// --- Thời gian sống ---
 const ACCESS_TOKEN_EXPIRE = process.env.ACCESS_TOKEN_EXPIRE || "15m";
 const REFRESH_TOKEN_EXPIRE_DAYS = parseInt(process.env.REFRESH_TOKEN_EXPIRE_DAYS || "7", 10);
 
-// Log để kiểm tra .env có nạp đúng không
 console.log("⚙️ Access token expire time:", ACCESS_TOKEN_EXPIRE);
 console.log("⚙️ Refresh token expire days:", REFRESH_TOKEN_EXPIRE_DAYS);
 
-// --- Tạo Access Token ---
+// --- Helper: Tạo Access Token ---
 function createAccessToken(payload) {
   return jwt.sign(payload, process.env.JWT_SECRET || "secret123", {
     expiresIn: ACCESS_TOKEN_EXPIRE,
   });
 }
 
-// --- Tạo Refresh Token ---
+// --- Helper: Tạo Refresh Token ---
 function createRefreshToken(payload) {
   return jwt.sign(payload, process.env.JWT_REFRESH_SECRET || "refresh456", {
     expiresIn: `${REFRESH_TOKEN_EXPIRE_DAYS}d`,
   });
 }
 
-// ✅ ĐĂNG KÝ
+// ✅ Đăng ký
 exports.signup = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -45,6 +45,13 @@ exports.signup = async (req, res) => {
 
     const { password: _, ...userWithoutPass } = newUser._doc;
 
+    await Log.create({
+      userId: newUser._id,
+      action: "REGISTER",
+      details: `Người dùng ${email} đăng ký tài khoản`,
+      ip: req.ip,
+    });
+
     res.status(201).json({
       message: "Đăng ký thành công 🎉",
       user: userWithoutPass,
@@ -55,7 +62,7 @@ exports.signup = async (req, res) => {
   }
 };
 
-// ✅ ĐĂNG NHẬP — tạo Access + Refresh Token
+// ✅ Đăng nhập (Redux dùng)
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -68,16 +75,19 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: "Email không tồn tại" });
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch)
+    if (!isMatch) {
+      await Log.create({
+        userId: null,
+        action: "LOGIN_FAIL",
+        details: `Đăng nhập thất bại với email ${email}`,
+        ip: req.ip,
+      });
       return res.status(400).json({ message: "Sai mật khẩu" });
+    }
 
-    // 🪙 Tạo Access Token
     const accessToken = createAccessToken({ id: user._id, role: user.role });
-
-    // 🔁 Tạo Refresh Token
     const refreshToken = createRefreshToken({ id: user._id });
 
-    // 💾 Lưu Refresh Token vào DB
     const expiresAt = new Date(
       Date.now() + REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60 * 1000
     );
@@ -88,6 +98,13 @@ exports.login = async (req, res) => {
     });
 
     const { password: _, ...userSafe } = user._doc;
+
+    await Log.create({
+      userId: user._id,
+      action: "LOGIN_SUCCESS",
+      details: `Người dùng ${user.email} đăng nhập thành công`,
+      ip: req.ip,
+    });
 
     res.status(200).json({
       message: "Đăng nhập thành công ✅",
@@ -101,19 +118,29 @@ exports.login = async (req, res) => {
   }
 };
 
-// ✅ API Refresh Token
+// ✅ Lấy thông tin user từ Access Token (Redux gọi)
+exports.getMe = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("-password");
+    if (!user) return res.status(404).json({ message: "Không tìm thấy user" });
+    res.json(user);
+  } catch (err) {
+    console.error("❌ Lỗi getMe:", err.message);
+    res.status(500).json({ message: "Lỗi server khi lấy thông tin user" });
+  }
+};
+
+// ✅ Refresh token
 exports.refresh = async (req, res) => {
   try {
     const { refreshToken } = req.body;
     if (!refreshToken)
       return res.status(400).json({ message: "Thiếu refresh token" });
 
-    // Kiểm tra trong DB
     const storedToken = await RefreshToken.findOne({ token: refreshToken });
     if (!storedToken)
       return res.status(403).json({ message: "Refresh token không hợp lệ" });
 
-    // Xác minh token
     let decoded;
     try {
       decoded = jwt.verify(
@@ -127,17 +154,13 @@ exports.refresh = async (req, res) => {
         .json({ message: "Refresh token không hợp lệ hoặc đã hết hạn" });
     }
 
-    // Tạo Access Token mới
     const user = await User.findById(decoded.id);
     if (!user) {
       await RefreshToken.deleteOne({ token: refreshToken });
       return res.status(404).json({ message: "Không tìm thấy người dùng" });
     }
 
-    const newAccessToken = createAccessToken({
-      id: user._id,
-      role: user.role,
-    });
+    const newAccessToken = createAccessToken({ id: user._id, role: user.role });
     res.json({ accessToken: newAccessToken });
   } catch (err) {
     console.error("❌ Lỗi refresh token:", err.message);
@@ -145,11 +168,19 @@ exports.refresh = async (req, res) => {
   }
 };
 
-// ✅ ĐĂNG XUẤT — xóa Refresh Token khỏi DB
+// ✅ Đăng xuất
 exports.logout = async (req, res) => {
   try {
     const { refreshToken } = req.body;
     if (refreshToken) await RefreshToken.deleteOne({ token: refreshToken });
+
+    await Log.create({
+      userId: req.user?.id || null,
+      action: "LOGOUT",
+      details: "Người dùng đăng xuất hệ thống",
+      ip: req.ip,
+    });
+
     res.status(200).json({ message: "🚪 Đã đăng xuất và thu hồi token" });
   } catch (err) {
     console.error("❌ Lỗi logout:", err.message);
