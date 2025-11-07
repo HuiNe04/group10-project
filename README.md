@@ -102,7 +102,7 @@ REFRESH_TOKEN_EXPIRE_DAYS=7
 EMAIL_USER=nguyenchautruonghuy@gmail.com
 EMAIL_PASS=dnbu izfy mxmq nzvm
 CLIENT_URL=http://localhost:3000
-
+```
 ## 🔧 Hướng dẫn cài đặt
 
 ### 1. Backend
@@ -111,8 +111,6 @@ CLIENT_URL=http://localhost:3000
 cd backend
 npm install
 npm start
-```
-
 Chạy tại: [http://localhost:5000](http://localhost:5000)
 
 ### 2. Frontend
@@ -303,3 +301,4 @@ Dự án **Group10 – User Management System** hoàn thiện đầy đủ backe
 * MongoDB Atlas + Express REST API
 
 🎯 Kết hợp các công nghệ hiện đại, giúp nhóm nắm vững quy trình phát triển ứng dụng web từ A → Z.
+
