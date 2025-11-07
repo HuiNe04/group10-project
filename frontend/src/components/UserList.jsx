@@ -115,11 +115,12 @@ function UserList({ reload, readonly = false }) {
               ) : (
                 <>
                   <img
-                    src={user.avatar || "https://via.placeholder.com/80"}
+                    src={user.avatar || "https://placehold.co/80x80?text=Avatar"}
                     alt="avatar"
+                    onError={(e) => { e.target.src = "/fallback.png"; }}
                     style={{
-                      width: "80px",
-                      height: "80px",
+                      width: "120px",
+                      height: "120px",
                       borderRadius: "50%",
                       objectFit: "cover",
                       marginBottom: "10px",
