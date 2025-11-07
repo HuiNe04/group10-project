@@ -124,17 +124,16 @@ npm install
 npm start
 Chạy tại: [http://localhost:5000](http://localhost:5000)
 
+
+```
 ### 2. Frontend
 
 ```bash
 cd frontend
 npm install
 npm start
-```
-
 Chạy tại: [http://localhost:3000](http://localhost:3000)
-
----
+```
 
 ## 🧪 Chức năng chính & Flow kiểm thử
 
@@ -324,5 +323,6 @@ Dự án **Group10 – User Management System** hoàn thiện đầy đủ backe
 * MongoDB Atlas + Express REST API
 
 🎯 Kết hợp các công nghệ hiện đại, giúp nhóm nắm vững quy trình phát triển ứng dụng web từ A → Z.
+
 
 
