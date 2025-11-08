@@ -21,14 +21,26 @@ const app = express();
 
 // ✅ Middleware cơ bản
 app.use(express.json());
-app.use(cors());
-app.use(logActivity);
 
-// ✅ Log request console để dễ debug
+// ✅ Cho phép frontend gọi API (Vercel + localhost)
+app.use(
+  cors({
+    origin: [
+      "https://group10-project-rose.vercel.app", // Frontend Vercel
+      "http://localhost:3000", // Local dev
+    ],
+    credentials: true,
+  })
+);
+
+// ✅ Ghi log request ra console
 app.use((req, res, next) => {
   console.log(`📡 ${req.method} ${req.originalUrl}`);
   next();
 });
+
+// ✅ Log hoạt động người dùng
+app.use(logActivity);
 
 // ✅ Kết nối MongoDB
 mongoose
@@ -36,15 +48,15 @@ mongoose
   .then(() => console.log("✅ Đã kết nối MongoDB Atlas thành công"))
   .catch((err) => console.error("❌ Lỗi kết nối MongoDB:", err));
 
-// ✅ Sử dụng routes
+// ✅ Routes
+app.use("/api/auth", authRoutes); // Auth
 app.use("/api", userRoutes);
-app.use("/api/auth", authRoutes); // ✅ chỉ cần dòng này thôi
 app.use("/api", profileRoutes);
 app.use("/api", adminRoutes);
 app.use("/api", passwordRoutes);
 app.use("/api", uploadRoutes);
 app.use("/api", logRoutes);
 
-// ✅ Chạy server
+// ✅ Server start
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
