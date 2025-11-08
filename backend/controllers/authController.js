@@ -12,14 +12,24 @@ const REFRESH_TOKEN_EXPIRE_DAYS = parseInt(process.env.REFRESH_TOKEN_EXPIRE_DAYS
 console.log("⚙️ Access token expire time:", ACCESS_TOKEN_EXPIRE);
 console.log("⚙️ Refresh token expire days:", REFRESH_TOKEN_EXPIRE_DAYS);
 
-// --- Helper: Tạo Access Token ---
+// ✅ Helper: Lấy IP thật của client
+function getClientIP(req) {
+  return (
+    req.headers["x-forwarded-for"]?.split(",")[0] ||
+    req.connection?.remoteAddress ||
+    req.socket?.remoteAddress ||
+    req.ip
+  );
+}
+
+// ✅ Helper: Tạo Access Token
 function createAccessToken(payload) {
   return jwt.sign(payload, process.env.JWT_SECRET || "secret123", {
     expiresIn: ACCESS_TOKEN_EXPIRE,
   });
 }
 
-// --- Helper: Tạo Refresh Token ---
+// ✅ Helper: Tạo Refresh Token
 function createRefreshToken(payload) {
   return jwt.sign(payload, process.env.JWT_REFRESH_SECRET || "refresh456", {
     expiresIn: `${REFRESH_TOKEN_EXPIRE_DAYS}d`,
@@ -42,14 +52,14 @@ exports.signup = async (req, res) => {
     const newUser = new User({ name, email, password: hashedPassword });
 
     await newUser.save();
-
     const { password: _, ...userWithoutPass } = newUser._doc;
 
+    const ip = getClientIP(req);
     await Log.create({
       userId: newUser._id,
       action: "REGISTER",
       details: `Người dùng ${email} đăng ký tài khoản`,
-      ip: req.ip,
+      ip,
     });
 
     res.status(201).json({
@@ -62,7 +72,7 @@ exports.signup = async (req, res) => {
   }
 };
 
-// ✅ Đăng nhập (Redux dùng)
+// ✅ Đăng nhập
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -75,22 +85,22 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: "Email không tồn tại" });
 
     const isMatch = await bcrypt.compare(password, user.password);
+    const ip = getClientIP(req); // ✅ lấy IP thật
+
     if (!isMatch) {
       await Log.create({
         userId: null,
         action: "LOGIN_FAIL",
         details: `Đăng nhập thất bại với email ${email}`,
-        ip: req.ip,
+        ip,
       });
       return res.status(400).json({ message: "Sai mật khẩu" });
     }
 
     const accessToken = createAccessToken({ id: user._id, role: user.role });
     const refreshToken = createRefreshToken({ id: user._id });
+    const expiresAt = new Date(Date.now() + REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60 * 1000);
 
-    const expiresAt = new Date(
-      Date.now() + REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60 * 1000
-    );
     await RefreshToken.create({
       userId: user._id,
       token: refreshToken,
@@ -103,7 +113,7 @@ exports.login = async (req, res) => {
       userId: user._id,
       action: "LOGIN_SUCCESS",
       details: `Người dùng ${user.email} đăng nhập thành công`,
-      ip: req.ip,
+      ip,
     });
 
     res.status(200).json({
@@ -118,7 +128,7 @@ exports.login = async (req, res) => {
   }
 };
 
-// ✅ Lấy thông tin user từ Access Token (Redux gọi)
+// ✅ Lấy thông tin user từ Access Token
 exports.getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
@@ -174,11 +184,12 @@ exports.logout = async (req, res) => {
     const { refreshToken } = req.body;
     if (refreshToken) await RefreshToken.deleteOne({ token: refreshToken });
 
+    const ip = getClientIP(req); // ✅ IP thật
     await Log.create({
       userId: req.user?.id || null,
       action: "LOGOUT",
       details: "Người dùng đăng xuất hệ thống",
-      ip: req.ip,
+      ip,
     });
 
     res.status(200).json({ message: "🚪 Đã đăng xuất và thu hồi token" });
