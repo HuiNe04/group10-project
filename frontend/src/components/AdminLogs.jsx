@@ -23,7 +23,11 @@ function AdminLogs() {
   }, []);
 
   if (loading) {
-    return <p style={{ textAlign: "center", marginTop: "50px" }}>⏳ Đang tải nhật ký...</p>;
+    return (
+      <p style={{ textAlign: "center", marginTop: "50px" }}>
+        ⏳ Đang tải nhật ký...
+      </p>
+    );
   }
 
   return (
@@ -31,25 +35,31 @@ function AdminLogs() {
       <h2 style={title}>🧾 Nhật ký hoạt động người dùng</h2>
 
       {logs.length === 0 ? (
-        <p style={{ textAlign: "center", color: "#888" }}>Chưa có hoạt động nào được ghi nhận.</p>
+        <p style={{ textAlign: "center", color: "#888" }}>
+          Chưa có hoạt động nào được ghi nhận.
+        </p>
       ) : (
         <div style={tableContainer}>
           <table style={tableStyle}>
             <thead>
               <tr style={headerRow}>
-                <th>👤 Người dùng</th>
-                <th>🎯 Hành động</th>
-                <th>🌐 IP</th>
-                <th>🕒 Thời gian</th>
+                <th style={cellStyle}>👤 Người dùng</th>
+                <th style={cellStyle}>🎯 Hành động</th>
+                <th style={cellStyle}>🌐 IP</th>
+                <th style={cellStyle}>🕒 Thời gian</th>
               </tr>
             </thead>
             <tbody>
               {logs.map((log, i) => (
                 <tr key={i} style={i % 2 === 0 ? rowEven : rowOdd}>
-                  <td>{log.userId?.name || "Khách (Chưa đăng nhập)"}</td>
-                  <td>{log.action}</td>
-                  <td>{log.ip}</td>
-                  <td>{new Date(log.timestamp).toLocaleString("vi-VN")}</td>
+                  <td style={cellStyle}>
+                    {log.userId?.name || "Khách (Chưa đăng nhập)"}
+                  </td>
+                  <td style={cellStyle}>{log.action}</td>
+                  <td style={cellStyle}>{log.ip}</td>
+                  <td style={cellStyle}>
+                    {new Date(log.timestamp).toLocaleString("vi-VN")}
+                  </td>
                 </tr>
               ))}
             </tbody>
