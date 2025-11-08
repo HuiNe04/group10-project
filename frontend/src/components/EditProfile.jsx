@@ -6,7 +6,7 @@ import Swal from "sweetalert2";
 function EditProfile() {
   const [form, setForm] = useState({ name: "", password: "", avatar: "" });
   const [preview, setPreview] = useState(""); // 🆕 Preview ảnh chọn mới
-  const [file, setFile] = useState(null); // 🆕 Lưu file ảnh tạm
+  const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const navigate = useNavigate();
 
@@ -18,6 +18,7 @@ function EditProfile() {
         setForm({
           name: res.data.name,
           password: "",
+          avatar: res.data.avatar || "",
         });
         setPreview(res.data.avatar || "");
       } catch (err) {
@@ -90,7 +91,10 @@ function EditProfile() {
         padding: "30px",
         boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
       }}
-    ><h2 style={{ textAlign: "center", color: "#007bff" }}>✏️ Cập nhật hồ sơ</h2>
+    >
+      <h2 style={{ textAlign: "center", color: "#007bff" }}>
+        ✏️ Cập nhật hồ sơ
+      </h2>
 
       <form
         onSubmit={handleUpdate}
@@ -115,9 +119,15 @@ function EditProfile() {
         {/* 🖼️ Hiển thị ảnh hiện tại hoặc preview ảnh mới */}
         <div style={{ textAlign: "center" }}>
           <img
-            src={form.avatar || "https://placehold.co/120x120?text=Avatar"}
+            src={
+              preview
+                ? preview
+                : form.avatar || "https://placehold.co/120x120?text=Avatar"
+            }
             alt="avatar"
-            onError={(e) => { e.target.src = "/fallback.png"; }}
+            onError={(e) => {
+              e.target.src = "/fallback.png";
+            }}
             style={{
               width: "120px",
               height: "120px",
