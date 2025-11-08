@@ -1,6 +1,5 @@
-// ✅ NẠP BIẾN MÔI TRƯỜNG TRƯỚC NHẤT
+// ✅ Nạp biến môi trường trước tiên
 require("dotenv").config();
-
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -14,42 +13,37 @@ const passwordRoutes = require("./routes/password");
 const uploadRoutes = require("./routes/upload");
 const logRoutes = require("./routes/logs");
 
-// ✅ Import middleware
+// ✅ Import middleware (giữ nguyên import logActivity)
 const { logActivity } = require("./middleware/logActivity");
 
 const app = express();
 
 // ✅ Middleware cơ bản
 app.use(express.json());
-
-// ✅ Cho phép frontend gọi API (Vercel + localhost)
 app.use(
   cors({
     origin: [
-      "https://group10-project-rose.vercel.app", // Frontend Vercel
-      "http://localhost:3000", // Local dev
+      "https://group10-project-rose.vercel.app", // Frontend trên Vercel
+      "http://localhost:3000", // Local development
     ],
     credentials: true,
   })
 );
 
-// ✅ Ghi log request ra console
+// ✅ Log request ra console (chỉ để debug, không lưu MongoDB)
 app.use((req, res, next) => {
   console.log(`📡 ${req.method} ${req.originalUrl}`);
   next();
 });
 
-// ✅ Log hoạt động người dùng
-app.use(logActivity);
-
-// ✅ Kết nối MongoDB
+// ✅ Kết nối MongoDB Atlas
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("✅ Đã kết nối MongoDB Atlas thành công"))
   .catch((err) => console.error("❌ Lỗi kết nối MongoDB:", err));
 
-// ✅ Routes
-app.use("/api/auth", authRoutes); // Auth
+// ✅ Đăng ký các route (logActivity sẽ được dùng bên trong từng route)
+app.use("/api/auth", authRoutes);
 app.use("/api", userRoutes);
 app.use("/api", profileRoutes);
 app.use("/api", adminRoutes);

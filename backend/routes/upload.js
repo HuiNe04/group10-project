@@ -1,10 +1,10 @@
-// backend/routes/upload.js
 const express = require("express");
 const router = express.Router();
 const { authMiddleware } = require("../middleware/authMiddleware");
+const { logActivity } = require("../middleware/logActivity");
 const uploadController = require("../controllers/uploadController");
 
-// 🖼️ API upload avatar (có xác thực)
-router.post("/upload-avatar", authMiddleware, uploadController.uploadAvatar);
+// 🖼️ Upload avatar
+router.post("/upload-avatar", authMiddleware, logActivity, uploadController.uploadAvatar);
 
 module.exports = router;

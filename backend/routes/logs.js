@@ -2,8 +2,10 @@
 const express = require("express");
 const router = express.Router();
 const { authMiddleware } = require("../middleware/authMiddleware");
+const { logActivity } = require("../middleware/logActivity");
 const roleMiddleware = require("../middleware/roleMiddleware");
 const logController = require("../controllers/logController");
+
 
 // ✅ Admin xem tất cả logs
 router.get("/logs", authMiddleware, roleMiddleware("admin"), logController.getAllLogs);

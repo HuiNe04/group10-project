@@ -3,6 +3,7 @@ const express = require("express");
 const router = express.Router();
 const userController = require("../controllers/userController");
 const { authMiddleware } = require("../middleware/authMiddleware");
+const { logActivity } = require("../middleware/logActivity");git
 const checkRole = require("../middleware/roleMiddleware");
 
 // ✅ GET all users — chỉ Admin hoặc Moderator được xem
